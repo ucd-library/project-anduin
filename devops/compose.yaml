@@ -1,0 +1,51 @@
+version: "3.7"
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: dagster
+      POSTGRES_USER: dagster
+      POSTGRES_PASSWORD: dagster
+    ports: ["5432:5432"]
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: dagster
+      RABBITMQ_DEFAULT_PASS: dagster
+    ports: ["5672:5672", "15672:15672"]  # 15672 = web UI
+
+  dagit:
+    image: <your-dagster-image>
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+    volumes:
+      - ./dagster_home:/opt/dagster/dagster_home
+    ports: ["3000:3000"]
+    command: dagit -h 0.0.0.0 -p 3000
+
+  daemon:
+    image: <your-dagster-image>
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+    volumes:
+      - ./dagster_home:/opt/dagster/dagster_home
+    command: dagster-daemon run
+
+  user_code:
+    image: <your-dagster-image>
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+    volumes:
+      - ./dagster_home:/opt/dagster/dagster_home
+    command: dagster api grpc --python-file your_repo.py
+
+  celery_worker:
+    image: <your-dagster-image>
+    depends_on: [rabbitmq]
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+    volumes:
+      - ./dagster_home:/opt/dagster/dagster_home
+    command: dagster api grpc --python-file your_repo.py & dagster-celery worker

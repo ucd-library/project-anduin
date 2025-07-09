@@ -2,3 +2,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+corkbuild.Dockerfile
+dagster.cork-build.json

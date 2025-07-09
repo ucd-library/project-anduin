@@ -28,9 +28,9 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # Optional: create non-root user
-RUN useradd -ms /bin/bash dagster
-USER dagster
-WORKDIR /home/dagster
+# RUN useradd -ms /bin/bash dagster
+# USER dagster
+# WORKDIR /home/dagster
 
 # Set $DAGSTER_HOME and copy dagster.yaml and workspace.yaml there
 ENV DAGSTER_HOME=/opt/dagster/dagster_home/
