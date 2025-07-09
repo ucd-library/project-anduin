@@ -1,0 +1,29 @@
+services:
+
+  pg:
+    image: postgres:16
+    container_name: pg
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./examples:/examples
+
+  dagster:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dagster
+    volumes:
+      - ./examples:/dagster/examples
+    ports:
+      - "3000:3000"
+    command: ["bash", "-c", "tail -f /dev/null"]
+
+
+volumes:
+  pg_data:
+    driver: local
