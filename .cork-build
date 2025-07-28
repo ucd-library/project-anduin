@@ -6,6 +6,9 @@
   "images" : {
     "dagster" : {
       "contextPath" : "."
+    },
+    "superset" : {
+      "contextPath" : "superset"
     }
   }
 }
