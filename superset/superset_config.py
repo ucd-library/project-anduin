@@ -38,7 +38,7 @@ if os.getenv('USE_KEYCLOAK', 'false').lower() == 'true':
 
   OAUTH_PROVIDERS = [
       {
-          'name': 'keycloak',
+          'name': 'UC Davis CAS',
           'token_key': 'access_token',
           'icon': 'fa-address-card',
           'remote_app': {

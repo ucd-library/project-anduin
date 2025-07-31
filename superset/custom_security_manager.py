@@ -8,12 +8,11 @@ from flask_appbuilder.security.sqla.models import Role
 
 ADMIN_ROLE = os.getenv('KEYCLOAK_ADMIN_ROLE', 'admin')
 PUBLIC_ROLE = os.getenv('KEYCLOAK_PUBLIC_ROLE', 'public')
-ROLE_DOT_PATH = os.getenv('KEYCLOAK_ROLE_DOT_PATH', 'resource_access.aggie-experts.roles')
+ROLE_DOT_PATH = os.getenv('KEYCLOAK_ROLE_DOT_PATH', 'roles')
 
 class CustomSsoSecurityManager(SupersetSecurityManager):
   def oauth_user_info(self, provider, response=None):
       data = response.get('userinfo')
-      print(data)
 
       # Parse JWT and extract roles or groups
       user_info = {
@@ -27,14 +26,14 @@ class CustomSsoSecurityManager(SupersetSecurityManager):
       # Traverse the nested dict using ROLE_DOT_PATH (e.g., 'realm_access.roles')
       role_path = ROLE_DOT_PATH.split('.')
       roles = data
-      print(f"Initial roles data: {roles}")
+      logging.debug(f"Initial oauth data: {roles}")
       for key in role_path:
         roles = roles.get(key, {})
-        print(f"Traversing to key '{key}': {roles}")
+        logging.debug(f"Traversing to key '{key}': {roles}")
       
       keycloak_roles = roles if isinstance(roles, list) else []
-      print(f"Extracted Keycloak roles: {keycloak_roles}")
-      
+      logging.info(f"Extracted Keycloak roles: {keycloak_roles} for user {user_info['username']}")
+
       # Store the determined role in user_info for later use
       if ADMIN_ROLE in keycloak_roles:
           user_info['superset_role'] = 'Admin'
@@ -43,7 +42,8 @@ class CustomSsoSecurityManager(SupersetSecurityManager):
       else:
           raise Forbidden("You are not authorized to access Superset")
 
-      print(f"Final user info: {user_info}")
+      logging.info(f"User {user_info['username']} assigned superset role: {user_info['superset_role']}")
+      logging.debug(f"Final user info: {user_info}")
       return user_info
 
   def auth_user_oauth(self, userinfo):
