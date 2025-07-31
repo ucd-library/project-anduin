@@ -23,7 +23,32 @@ services:
       - "3000:3000"
     command: ["bash", "-c", "tail -f /dev/null"]
 
+  superset:
+    build:
+      context: superset
+      dockerfile: Dockerfile
+    env_file: 
+      - .env
+    container_name: superset
+    environment:
+      - PGPASSWORD=""
+      - PGHOST=pg
+      - PGUSER=postgres
+      - PGDATABASE=postgres
+    volumes:
+      - superset_home:/app/superset_home
+      - superset_init:/etc/superset/init
+      - ./superset/superset_config.py:/app/superset_config.py
+      - ./superset/custom_security_manager.py:/app/custom_security_manager.py
+    ports:
+      - "8088:8088"
+    command: ["bash", "-c", "tail -f /dev/null"]
+
 
 volumes:
   pg_data:
+    driver: local
+  superset_home:
+    driver: local
+  superset_init:
     driver: local

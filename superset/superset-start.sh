@@ -1,6 +1,6 @@
 #! /bin/bash
 
-DIR=/nf-init
+DIR=/etc/superset/init
 SUPERSET_FILE=$DIR/superset
 DASHBOARD_FILE=$DIR/dashboard
 
@@ -10,18 +10,24 @@ if test -f $SUPERSET_FILE; then
   echo "Superset init file exists, skipping init"
 else
   echo "Starting Superset init"
-  /app/docker/superset_init.sh
+  /app/docker/superset-init.sh
   touch $SUPERSET_FILE
 fi
 
 if test -f $DASHBOARD_FILE; then
   echo "Dashboard init file exists, skipping init"
-else
+else 
   echo "Starting Dashboard init"
-  for file in /io/*.zip; do
-    echo "Importing $file"
-    /app/docker/load_dashboard.sh $file
-  done
+  if [ -d /io ]; then
+    for file in /io/*.zip; do
+      if [ -e "$file" ]; then
+        echo "Importing $file"
+        /app/docker/superset-load-dashboard.sh "$file"
+      fi
+    done
+  else
+    echo "/io directory does not exist, skipping dashboard import"
+  fi
   touch $DASHBOARD_FILE
 fi
 

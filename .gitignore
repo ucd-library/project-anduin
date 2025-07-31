@@ -5,3 +5,4 @@ __pycache__/
 
 corkbuild.Dockerfile
 dagster.cork-build.json
+.env
