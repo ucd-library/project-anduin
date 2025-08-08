@@ -1,7 +1,9 @@
 {
   "registry" : "us-west1-docker.pkg.dev/digital-ucdavis-edu/pub",
 
-  "repositories" : {},
+  "repositories" : {
+    "postgres" : "https://github.com/ucd-library/postgres"
+  },
 
   "images" : {
     "dagster" : {
@@ -9,6 +11,12 @@
     },
     "superset" : {
       "contextPath" : "superset"
+    },
+    "anduin-pg" : {
+      "contextPath" : "postgres",
+      "options" : {
+        "build-arg" : "POSTGRES_IMAGE=${postgres.postgres}"
+      }
     }
   }
 }

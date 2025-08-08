@@ -14,6 +14,7 @@ The following environment variables are used to connect Superset to the Postgres
 
 The following environment variables are used to configure Keycloak authentication in Superset:
 
+- `USE_KEYCLOAK`: Set to `true` to enable Keycloak authentication (default: `false`)
 - `KEYCLOAK_HOST`: The URL of the Keycloak server (default: `https://auth.library.ucdavis.edu`)
 - `KEYCLOAK_REALM_NAME`: The name of the Keycloak realm (default: `superset`)
 - `KEYCLOAK_CLIENT_ID`: The client ID for the Keycloak client

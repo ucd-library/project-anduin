@@ -1,0 +1,23 @@
+{
+  "name": "dagster-nodejs-materialize",
+  "version": "1.0.0",
+  "description": "Node.js module to materialize Dagster jobs with options and partitions",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js",
+    "example": "node example.js",
+    "demo": "node demo.js",
+    "setup": "./setup.sh"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  },
+  "keywords": [
+    "dagster",
+    "materialize",
+    "jobs",
+    "partitions"
+  ],
+  "author": "",
+  "license": "MIT"
+}

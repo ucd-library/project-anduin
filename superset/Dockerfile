@@ -26,3 +26,5 @@ RUN touch __init__.py
 ENV SUPERSET_CONFIG_PATH=/app/superset_config.py
 # for loading custom security manager
 ENV PYTHONPATH="${PYTHONPATH}:/app" 
+
+CMD [ "/app/docker/superset-start.sh" ]
