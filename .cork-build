@@ -7,7 +7,7 @@
 
   "images" : {
     "dagster" : {
-      "contextPath" : "."
+      "contextPath" : "dagster"
     },
     "superset" : {
       "contextPath" : "superset"

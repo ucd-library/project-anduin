@@ -1,3 +1,0 @@
-CREATE DATABASE superset;
-CREATE DATABASE dagster;
-CREATE DATABASE postgres;
