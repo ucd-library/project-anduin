@@ -4,6 +4,7 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 const config = {
   
+  appName : process.env.APP_NAME || 'Anduin',
   appUrl : process.env.APP_URL || 'http://localhost:3000',
   port : process.env.PORT || 3000,
 
@@ -32,26 +33,26 @@ const config = {
     clientId : process.env.OIDC_CLIENT_ID,
     secret : process.env.OIDC_CLIENT_SECRET,
     scopes : process.env.OIDC_SCOPES || 'openid profile email',
-    jwtSecret : process.env.OIDC_JWT_SECRET,
+    jwtSecret : process.env.OIDC_JWT_SECRET || 'abcd1234',
     loginPath : process.env.OIDC_LOGIN_PATH || '/auth/login',
     logoutPath : process.env.OIDC_LOGOUT_PATH || '/auth/logout',
     successPath : process.env.OIDC_SUCCESS_PATH || '/auth/success',
   },
 
   dagster : {
-    enabled : process.env.DAGSTER_ENABLED === 'true',
+    enabled : process.env.DAGSTER_ENABLED !== 'false',
     url : process.env.DAGSTER_URL || 'http://dagster:3000',
     pathPrefix : process.env.DAGSTER_PATH_PREFIX || '/dagster'
   },
 
   superset : {
-    enabled : process.env.SUPERSET_ENABLED === 'true',
+    enabled : process.env.SUPERSET_ENABLED !== 'false',
     url : process.env.SUPERSET_URL || 'http://superset:3000',
     pathPrefix : process.env.SUPERSET_PATH_PREFIX || '/superset'
   },
 
   cask : {
-    enabled : process.env.CASK_ENABLED === 'true',
+    enabled : process.env.CASK_ENABLED !== 'false',
     url : process.env.CASK_URL || 'http://cask:3000',
     pathPrefix : process.env.CASK_PATH_PREFIX || '/cask'
   }

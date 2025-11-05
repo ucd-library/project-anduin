@@ -1,0 +1,105 @@
+<html>
+  <head>
+    <title>Anduin</title>
+    <script src="https://brand.library.ucdavis.edu/ui/loader.js?ignorePolyfills=true"></script>
+    <script src="/config.js"></script>
+    <style>
+      .content {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      @container (min-width: 600px) {
+        .content {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+    </style>
+  </head>
+  <body>
+    <ucd-theme-header 
+      figure-src="https://brand.library.ucdavis.edu/img/book-logo.png" 
+      slogan="Powered by Anduin">
+    </ucd-theme-header>
+
+    <div class="content">
+      <div class="category-brand--thiebaud-icing" id="dagster">
+        <div class="factoid factoid--brackets">
+          <a class="factoid__link" href="" id="dagster-link">
+            <div class="factoid__bracket-one"></div>
+            <div class="factoid__bracket-wrapper">
+              <div class="factoid__figure factoid__icon">
+                <cork-icon icon="fas.file"></cork-icon>
+              </div>
+              <div class="factoid__body">
+                <h2 class="factoid__big-text">Execute</h2>
+                <h3 class="factoid__small-text">
+                  <div class="no-wrap">Dagster</div> 
+                </h3>
+              </div>
+            </div>
+            <div class="factoid__bracket-two"></div>
+          </a>
+        </div>
+      </div>
+
+      <div class="category-brand--thiebaud-icing" id="cask">
+        <div class="factoid factoid--brackets">
+          <a class="factoid__link" href="" id="cask-link">
+            <div class="factoid__bracket-one"></div>
+            <div class="factoid__bracket-wrapper">
+              <div class="factoid__figure factoid__icon">
+                <cork-icon icon="fas.fingerprint"></cork-icon>
+              </div>
+              <div class="factoid__body">
+                <h2 class="factoid__big-text">Files</h2>
+                <h3 class="factoid__small-text">
+                  <div class="no-wrap">CaskFs</div> 
+                </h3>
+              </div>
+            </div>
+            <div class="factoid__bracket-two"></div>
+          </a>
+        </div>
+      </div>
+
+      <div class="category-brand--thiebaud-icing" id="superset">
+        <div class="factoid factoid--brackets">
+          <a class="factoid__link" href="" id="superset-link">
+            <div class="factoid__bracket-one"></div>
+            <div class="factoid__bracket-wrapper">
+              <div class="factoid__figure factoid__icon">
+                <cork-icon icon="fas.fingerprint"></cork-icon>
+              </div>
+              <div class="factoid__body">
+                <h2 class="factoid__big-text">Dashboard</h2>
+                <h3 class="factoid__small-text">
+                  <div class="no-wrap">Superset</div> 
+                </h3>
+              </div>
+            </div>
+            <div class="factoid__bracket-two"></div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        document.querySelector('ucd-theme-header').setAttribute('site-name', APP_CONFIG.appName);
+      });
+
+      ['dagster', 'cask', 'superset'].forEach(service => {
+        if( !APP_CONFIG[service].enabled ) {
+          document.getElementById(service).style.display = 'none';
+          return;
+        }
+        const linkEl = document.getElementById(`${service}-link`);
+        linkEl.href = APP_CONFIG[service].pathPrefix;
+      });
+    </script>
+  </body>
+</html>

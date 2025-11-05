@@ -1,7 +1,24 @@
 {
+  "name": "auth-gateway",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "jrmerz@ucdavis.edu",
+  "license": "ISC",
+  "description": "",
   "dependencies": {
+    "@ucd-lib/logger": "^0.0.7",
     "express": "^5.1.0",
     "express-openid-connect": "^2.19.2",
-    "http-proxy": "^1.18.1"
+    "http-proxy": "^1.18.1",
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.2.0",
+    "node-fetch": "^3.3.2"
   }
 }

@@ -12,12 +12,16 @@ const allowedRoles = new Set(Object.values(config.roles));
 
 
 function oidcSetup(app) {
+  if( !config.auth.enabled ) {
+    return;
+  }
+
   app.use(auth({
     issuerBaseURL: config.oidc.baseUrl,
     baseURL: config.appUrl,
     clientID: config.oidc.clientId,
     clientSecret: config.oidc.secret,
-    secret : config.oidc.secret,
+    secret : config.oidc.jwtSecret,
     routes : {
       callback : '/auth/callback',
       login : false,
@@ -124,4 +128,4 @@ function accessProxy(req, res, next) {
   });
 };
 
-export default { oidcSetup, accessProxy };
+export { oidcSetup, accessProxy };

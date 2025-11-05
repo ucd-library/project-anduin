@@ -1,26 +1,11 @@
 import {createLogger} from '@ucd-lib/logger';
 import config from './config.js';
 
-const loggers = {};
+const logger = createLogger({
+  name : 'auth-gateway',
+  noInitMsg : true,
+  labelsProperties : ['name'],
+  level: config.logLevel
+});
 
-function getLogger(name) {
-  if( loggers[name] ) return loggers[name];
-  loggers[name] = createLogger({
-    name,
-    noInitMsg : true,
-    labelsProperties : ['name'],
-    level: config.logLevel
-  });
-  return loggers[name];
-}
-
-function setLogLevel(level) {
-  config.logLevel = level;
-  Object.values(loggers).forEach(logger => logger.level = level);
-}
-
-function silenceLoggers() {
-  setLogLevel('fatal');
-}
-
-export { getLogger, setLogLevel, silenceLoggers };
+export default logger;
