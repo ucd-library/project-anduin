@@ -1,16 +1,53 @@
 import logging
 import os
+import json
+from flask import request
 from superset.security import SupersetSecurityManager
 from werkzeug.exceptions import Forbidden
 from flask_appbuilder.security.sqla.models import Role
 
-
-
 ADMIN_ROLE = os.getenv('KEYCLOAK_ADMIN_ROLE', 'admin')
 PUBLIC_ROLE = os.getenv('KEYCLOAK_PUBLIC_ROLE', 'public')
 ROLE_DOT_PATH = os.getenv('KEYCLOAK_ROLE_DOT_PATH', 'roles')
+KEYCLOAK_PUBLIC_KEY = os.getenv('KEYCLOAK_PUBLIC_KEY', '')
+KEYCLOAK_ISSUER = os.getenv('KEYCLOAK_ISSUER', 'https://your-keycloak-domain/realms/your-realm')
+KEYCLOAK_AUDIENCE = os.getenv('KEYCLOAK_AUDIENCE', 'superset')
 
 class CustomSsoSecurityManager(SupersetSecurityManager):
+    def auth_user_remote_user(self, username):
+        """Authenticate user from proxy headers with JWT validation"""
+        
+        # Get JWT from header
+        token = request.headers.get('X-Auth-User', '')
+        
+        if not token:
+            return None
+            
+        try:
+            user = json.loads(token)
+
+            username = user.get('preferred_username') or user.get('username')
+            email = user.get('email')
+            first_name = user.get('given_name', '')
+            last_name = user.get('family_name', '')
+            
+            # Find or create user
+            user = self.find_user(username=username)
+            if not user:
+                user = self.add_user(
+                    username=username,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    role=self.find_role('Gamma')
+                )
+            
+            return user
+            
+        except jwt.InvalidTokenError as e:
+            logging.error(f"JWT validation failed: {str(e)}")
+            return None
+
   def oauth_user_info(self, provider, response=None):
       data = response.get('userinfo')
 

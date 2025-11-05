@@ -57,3 +57,11 @@ if os.getenv('USE_KEYCLOAK', 'false').lower() == 'true':
 
   CUSTOM_SECURITY_MANAGER = CustomSsoSecurityManager
 
+elif os.getenv('USE_PROXY_AUTH', 'false').lower() == 'true':
+    AUTH_TYPE = AUTH_REMOTE_USER
+    AUTH_USER_REGISTRATION = True
+    AUTH_ROLES_SYNC_AT_LOGIN = True
+    AUTH_USER_REGISTRATION_ROLE = 'Gamma'
+    
+
+    CUSTOM_SECURITY_MANAGER = CustomSsoSecurityManager

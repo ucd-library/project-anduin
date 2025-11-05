@@ -6,6 +6,11 @@ if [[ -z "$VERSION" ]]; then
 fi
 
 cork-kube build exec \
+  -p caskfs \
+  -v $VERSION \
+  -o sandbox
+
+cork-kube build exec \
   -p project-anduin \
   -v $VERSION \
   -o sandbox
