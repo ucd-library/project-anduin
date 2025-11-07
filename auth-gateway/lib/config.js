@@ -47,13 +47,13 @@ const config = {
 
   superset : {
     enabled : process.env.SUPERSET_ENABLED !== 'false',
-    url : process.env.SUPERSET_URL || 'http://superset:3000',
+    url : process.env.SUPERSET_URL || 'http://superset:8088',
     pathPrefix : process.env.SUPERSET_PATH_PREFIX || '/superset'
   },
 
   cask : {
     enabled : process.env.CASK_ENABLED !== 'false',
-    url : process.env.CASK_URL || 'http://cask:3000',
+    url : process.env.CASK_URL || 'http://cask:3001',
     pathPrefix : process.env.CASK_PATH_PREFIX || '/cask'
   }
 }

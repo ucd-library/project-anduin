@@ -14,6 +14,27 @@ POSTGRES_PORT = os.getenv('PGPORT', '5432')
 POSTGRES_DB = os.getenv('PGDATABASE', 'postgres')
 POSTGRES_USER = os.getenv('PGUSER', 'postgres')
 POSTGRES_PASSWORD = os.getenv('PGPASSWORD', 'postgres')
+APPLICATION_ROOT= os.getenv('SUPERSET_APP_ROOT', '/superset')
+APP_ROOT= os.getenv('SUPERSET_APP_ROOT', '/superset')
+print(f"Superset APPLICATION_ROOT set to: {APPLICATION_ROOT}")
+
+# Enable proxy fix for proper header handling
+ENABLE_PROXY_FIX = True
+
+# Session cookie configuration for sub-path
+SESSION_COOKIE_PATH = APPLICATION_ROOT
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# CSRF configuration
+WTF_CSRF_ENABLED = True
+WTF_CSRF_TIME_LIMIT = None
+
+# Preferred URL scheme (use 'https' if behind HTTPS proxy)
+PREFERRED_URL_SCHEME = os.getenv('SUPERSET_URL_SCHEME', 'http')
+
+# Base URL for Superset when hosted at a sub-path
+WEBDRIVER_BASEURL = f"{PREFERRED_URL_SCHEME}://{os.getenv('SUPERSET_HOST', 'localhost')}{APPLICATION_ROOT}/"
+WEBDRIVER_BASEURL_USER_FRIENDLY = WEBDRIVER_BASEURL
 
 # Handle empty password case
 if POSTGRES_PASSWORD:

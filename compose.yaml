@@ -1,8 +1,9 @@
 services:
 
-  pg:
-    image: postgres:16
-    container_name: pg
+  postgres:
+    image: ${IMAGE_PROJECT_ANDUIN_ANDUIN_PG}
+    env_file: 
+      - .env
     environment:
       POSTGRES_USER: postgres
       POSTGRES_HOST_AUTH_METHOD: trust
@@ -13,28 +14,38 @@ services:
       - ./examples:/examples
 
   dagster:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: dagster
+    image: ${IMAGE_PROJECT_ANDUIN_DAGSTER}
+    env_file: 
+      - .env
     volumes:
       - ./examples:/dagster/examples
     ports:
       - "3000:3000"
-    command: ["bash", "-c", "tail -f /dev/null"]
+    # command: ["bash", "-c", "tail -f /dev/null"]
+    # command: ["dagster", "dev",  "-h", "0.0.0.0", "-p", "3000", "-f", "/dagster/examples/001_hello_world/defs.py"]
+    command: ["dagster-webserver", "--path-prefix", "/dagster", "-h", "0.0.0.0", "-p", "3000", "-f", "/dagster/examples/001_hello_world/defs.py"]
+
+
+  dagster-daemon:
+    image: ${IMAGE_PROJECT_ANDUIN_DAGSTER}
+    # If using schedules or sensors or run-queue
+    command: ["dagster-daemon", "run"]
+    env_file: 
+      - .env
+    volumes:
+      - ./examples:/dagster/examples
 
   superset:
-    build:
-      context: superset
-      dockerfile: Dockerfile
+    image: ${IMAGE_PROJECT_ANDUIN_SUPERSET}
     env_file: 
       - .env
     container_name: superset
     environment:
       - PGPASSWORD=""
-      - PGHOST=pg
+      - PGHOST=postgres
       - PGUSER=postgres
       - PGDATABASE=postgres
+      - SUPERSET_APP_ROOT=/superset
     volumes:
       - superset_home:/app/superset_home
       - superset_init:/etc/superset/init
@@ -44,6 +55,33 @@ services:
       - "8088:8088"
     command: ["bash", "-c", "tail -f /dev/null"]
 
+  auth-gateway:
+    image: ${IMAGE_PROJECT_ANDUIN_AUTH_GATEWAY}
+    env_file: 
+      - .env
+    environment:
+      - PORT=4000
+    ports:
+      - "4000:4000"
+    command: ["bash", "-c", "tail -f /dev/null"]
+
+  cask:
+    image: ${IMAGE_CASKFS_CASKFS}
+    env_file: 
+      - .env
+    environment:
+      - CASKFS_PG_HOST=postgres
+      - CASKFS_ENABLE_POWERWASH=true
+      - CASKFS_ROOT_DIR=/opt/cache
+      - CASKFS_ACL_ENABLED=false
+      - CASKFS_WEBAPP_PORT=3001
+      - CASKFS_WEBAPP_ENV=dev
+      - CASKFS_WEBAPP_PATH_PREFIX=/cask
+    volumes:
+      - caskfs_data:/opt/cache
+    ports:
+      - "3001:3001"
+
 
 volumes:
   pg_data:
@@ -51,4 +89,6 @@ volumes:
   superset_home:
     driver: local
   superset_init:
+    driver: local
+  caskfs_data:
     driver: local

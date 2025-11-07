@@ -8,6 +8,7 @@ for( let serviceName of ALL_SERVICES ) {
   if( config[serviceName].enabled ) {
     services[serviceName] = {
       url : config[serviceName].url,
+      pathPrefix : config[serviceName].pathPrefix,
       routeRegex : new RegExp('^'+config[serviceName].pathPrefix+'(\/|$)')
     }
   }
@@ -35,6 +36,9 @@ async function middleware(req, res, next) {
 
   for( let service of Object.values(services) ) {
     if( service.routeRegex.test(path) ) {
+      // path = path.replace(service.routeRegex, '/');
+      req.set('X-Forwarded-For', service.pathPrefix);
+
       return proxyRequest(req, res, service.url, path);
     }
   }

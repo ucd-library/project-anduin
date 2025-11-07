@@ -14,39 +14,39 @@ KEYCLOAK_ISSUER = os.getenv('KEYCLOAK_ISSUER', 'https://your-keycloak-domain/rea
 KEYCLOAK_AUDIENCE = os.getenv('KEYCLOAK_AUDIENCE', 'superset')
 
 class CustomSsoSecurityManager(SupersetSecurityManager):
-    def auth_user_remote_user(self, username):
-        """Authenticate user from proxy headers with JWT validation"""
+    # def auth_user_remote_user(self, username):
+    #     """Authenticate user from proxy headers with JWT validation"""
         
-        # Get JWT from header
-        token = request.headers.get('X-Auth-User', '')
+    #     # Get JWT from header
+    #     token = request.headers.get('X-Auth-User', '')
         
-        if not token:
-            return None
+    #     if not token:
+    #         return None
             
-        try:
-            user = json.loads(token)
+    #     try:
+    #         user = json.loads(token)
 
-            username = user.get('preferred_username') or user.get('username')
-            email = user.get('email')
-            first_name = user.get('given_name', '')
-            last_name = user.get('family_name', '')
+    #         username = user.get('preferred_username') or user.get('username')
+    #         email = user.get('email')
+    #         first_name = user.get('given_name', '')
+    #         last_name = user.get('family_name', '')
             
-            # Find or create user
-            user = self.find_user(username=username)
-            if not user:
-                user = self.add_user(
-                    username=username,
-                    email=email,
-                    first_name=first_name,
-                    last_name=last_name,
-                    role=self.find_role('Gamma')
-                )
+    #         # Find or create user
+    #         user = self.find_user(username=username)
+    #         if not user:
+    #             user = self.add_user(
+    #                 username=username,
+    #                 email=email,
+    #                 first_name=first_name,
+    #                 last_name=last_name,
+    #                 role=self.find_role('Gamma')
+    #             )
             
-            return user
+    #         return user
             
-        except jwt.InvalidTokenError as e:
-            logging.error(f"JWT validation failed: {str(e)}")
-            return None
+    #     except jwt.InvalidTokenError as e:
+    #         logging.error(f"JWT validation failed: {str(e)}")
+    #         return None
 
   def oauth_user_info(self, provider, response=None):
       data = response.get('userinfo')
