@@ -59,6 +59,11 @@ services:
     image: ${IMAGE_PROJECT_ANDUIN_AUTH_GATEWAY}
     env_file: 
       - .env
+    volumes:
+      - ./auth-gateway/controllers:/app/controllers
+      - ./auth-gateway/lib:/app/lib
+      - ./auth-gateway/client:/app/client
+      - ./auth-gateway/index.js:/app/index.js
     environment:
       - PORT=4000
     ports:

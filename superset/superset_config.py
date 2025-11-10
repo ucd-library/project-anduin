@@ -1,13 +1,16 @@
-import os, logging
-from flask_appbuilder.security.manager import AUTH_OAUTH
+import os, logging, json
+from flask import request, g
+from flask_login import login_user, logout_user
+from flask_appbuilder.security.manager import AUTH_OAUTH, AUTH_REMOTE_USER
 from custom_security_manager import CustomSsoSecurityManager
 
-# LOGGING_LEVEL = logging.DEBUG
-# logging.getLogger('superset.security').setLevel(logging.DEBUG)
-# logging.getLogger('flask_appbuilder.security.manager').setLevel(logging.DEBUG)
-# logging.getLogger('flask_oauthlib').setLevel(logging.DEBUG)  # if using older Flask-OAuthlib
-# logging.getLogger('authlib').setLevel(logging.DEBUG)          # modern Authlib for OAuth
-# logging.getLogger('flask_appbuilder.security.views').setLevel(logging.DEBUG)
+
+LOGGING_LEVEL = logging.DEBUG
+logging.getLogger('superset.security').setLevel(logging.DEBUG)
+logging.getLogger('flask_appbuilder.security.manager').setLevel(logging.DEBUG)
+logging.getLogger('flask_oauthlib').setLevel(logging.DEBUG)  # if using older Flask-OAuthlib
+logging.getLogger('authlib').setLevel(logging.DEBUG)          # modern Authlib for OAuth
+logging.getLogger('flask_appbuilder.security.views').setLevel(logging.DEBUG)
 
 POSTGRES_HOST = os.getenv('PGHOST', 'postgres')
 POSTGRES_PORT = os.getenv('PGPORT', '5432')
@@ -15,26 +18,6 @@ POSTGRES_DB = os.getenv('PGDATABASE', 'postgres')
 POSTGRES_USER = os.getenv('PGUSER', 'postgres')
 POSTGRES_PASSWORD = os.getenv('PGPASSWORD', 'postgres')
 APPLICATION_ROOT= os.getenv('SUPERSET_APP_ROOT', '/superset')
-APP_ROOT= os.getenv('SUPERSET_APP_ROOT', '/superset')
-print(f"Superset APPLICATION_ROOT set to: {APPLICATION_ROOT}")
-
-# Enable proxy fix for proper header handling
-ENABLE_PROXY_FIX = True
-
-# Session cookie configuration for sub-path
-SESSION_COOKIE_PATH = APPLICATION_ROOT
-SESSION_COOKIE_SAMESITE = 'Lax'
-
-# CSRF configuration
-WTF_CSRF_ENABLED = True
-WTF_CSRF_TIME_LIMIT = None
-
-# Preferred URL scheme (use 'https' if behind HTTPS proxy)
-PREFERRED_URL_SCHEME = os.getenv('SUPERSET_URL_SCHEME', 'http')
-
-# Base URL for Superset when hosted at a sub-path
-WEBDRIVER_BASEURL = f"{PREFERRED_URL_SCHEME}://{os.getenv('SUPERSET_HOST', 'localhost')}{APPLICATION_ROOT}/"
-WEBDRIVER_BASEURL_USER_FRIENDLY = WEBDRIVER_BASEURL
 
 # Handle empty password case
 if POSTGRES_PASSWORD:
@@ -46,7 +29,15 @@ DATABASE_PORT = int(POSTGRES_PORT)
 DATABASE_DIALECT = "postgresql"
 SUPERSET_SECRET_KEY = os.getenv('SUPERSET_SECRET_KEY', 'not_a_secret_key')
 
+RECAPTCHA_PUBLIC_KEY = None
+RECAPTCHA_PRIVATE_KEY = None
+
+ADMIN_ROLE = os.getenv('KEYCLOAK_ADMIN_ROLE', 'admin')
+PUBLIC_ROLE = os.getenv('KEYCLOAK_PUBLIC_ROLE', 'public')
+ROLE_DOT_PATH = os.getenv('KEYCLOAK_ROLE_DOT_PATH', 'roles')
+
 if os.getenv('USE_KEYCLOAK', 'false').lower() == 'true':
+  print("Configuring Superset to use Keycloak OAuth2 Authentication")
   AUTH_TYPE = AUTH_OAUTH
 
   # this would default all users to admin role
@@ -79,6 +70,106 @@ if os.getenv('USE_KEYCLOAK', 'false').lower() == 'true':
   CUSTOM_SECURITY_MANAGER = CustomSsoSecurityManager
 
 elif os.getenv('USE_PROXY_AUTH', 'false').lower() == 'true':
+    print("Configuring Superset to use Proxy Authentication")
+
+    class RemoteUserMiddleware(object):
+        def __init__(self, app):
+            self.app = app
+        def __call__(self, environ, start_response):
+            user = environ.pop('HTTP_X_PROXY_REMOTE_USER', None)
+            environ['REMOTE_USER'] = '{"username": "jrmerz","first_name": "Justin","last_name": "Merz","email": "jrmerz@gmail.com","roles": ["admin"]}'
+            return self.app(environ, start_response)
+
+    ADDITIONAL_MIDDLEWARE = [RemoteUserMiddleware, ]
+
+    class RemoteUserLogin(object):
+
+        def __init__(self, app):
+            self.app = app
+
+        def log_user(self, environ):
+            from superset import security_manager as sm
+
+            user = self.get_user(environ)
+            logging.info("REMOTE_USER Checking logged user")
+            if hasattr(g, "user") and \
+                hasattr(g.user, "username"):
+                if g.user.username == user.get('username'):
+                    logging.info("REMOTE_USER user already logged")
+                    return g.user
+                else:
+                    logout_user()
+
+            cuser = sm.find_user(username=user.get('username'))
+            logging.info("REMOTE_USER Look up user: %s", cuser)
+
+            # Traverse the nested dict using ROLE_DOT_PATH (e.g., 'realm_access.roles')
+            role_path = ROLE_DOT_PATH.split('.')
+            roles = user
+            logging.debug(f"Initial data: {roles}")
+            for key in role_path:
+                roles = roles.get(key, {})
+                logging.debug(f"Traversing to key '{key}': {roles}")
+            
+                keycloak_roles = roles if isinstance(roles, list) else []
+                logging.info(f"Extracted Keycloak roles: {keycloak_roles} for user {user['username']}")
+
+                # Store the determined role in user_info for later use
+                if ADMIN_ROLE in keycloak_roles:
+                    user['superset_role'] = 'Admin'
+                elif PUBLIC_ROLE in keycloak_roles:
+                    user['superset_role'] = 'Public'
+                else:
+                    raise Forbidden("You are not authorized to access Superset")
+
+            if not cuser:
+                cuser = sm.add_user(
+                    username=user.get('username'),
+                    email=user.get('email'),
+                    first_name=user.get('first_name'),
+                    last_name=user.get('last_name'),
+                    role=sm.find_role('Gamma')
+                )
+                sm.get_session.commit()
+            else:
+                target_role = sm.find_role(user['superset_role'])
+                # if target_role and (not cuser.roles or target_role not in cuser.roles):
+                cuser.roles = [target_role]
+                sm.update_user(cuser)
+
+            logging.info("REMOTE_USER Login_user: %s", cuser)
+            login_user(cuser)
+
+
+            return cuser
+
+        def get_user(self, environ):
+    #        user = environ.pop('HTTP_X_PROXY_REMOTE_USER', None)
+            # user = "kamil"
+            # if not user and self.app.debug:
+            #     # Dev hack
+            #     user = environ.get("werkzeug.request").args.get("logme")
+            #     if user:
+            #         logging.error("Logging user from request. Remove me ASAP!!!: %s", user)
+
+            # environ['REMOTE_USER'] = user
+            print('get_user called', environ['REMOTE_USER'])
+            return json.loads(environ['REMOTE_USER'])
+
+        def before_request(self):
+            user = self.log_user(request.environ)
+            print("USER:", user)
+            # if not user:
+            #     raise Exception("Invalid login or user not found")
+
+    from superset.app import SupersetAppInitializer
+    def app_init(app):
+        logging.info("Resgistering RemoteUserLogin")
+        app.before_request(RemoteUserLogin(app).before_request)
+        return SupersetAppInitializer(app)
+
+    APP_INITIALIZER = app_init
+
     AUTH_TYPE = AUTH_REMOTE_USER
     AUTH_USER_REGISTRATION = True
     AUTH_ROLES_SYNC_AT_LOGIN = True

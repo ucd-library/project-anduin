@@ -48,7 +48,7 @@ const config = {
   superset : {
     enabled : process.env.SUPERSET_ENABLED !== 'false',
     url : process.env.SUPERSET_URL || 'http://superset:8088',
-    pathPrefix : process.env.SUPERSET_PATH_PREFIX || '/superset'
+    pathPrefix : process.env.SUPERSET_PATH_PREFIX || '/superset',
   },
 
   cask : {
