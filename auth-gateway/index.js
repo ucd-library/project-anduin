@@ -2,8 +2,12 @@ import express from 'express';
 import { oidcSetup, accessProxy } from './controllers/auth.js';
 import config from './lib/config.js';
 import proxy from './controllers/proxy.js';
+import cleanXHeadersMiddleware from './lib/clean-x-headers.js';
 
 const app = express();
+
+// apply x- header cleaning middleware
+app.use(cleanXHeadersMiddleware);
 
 // ensure oidc routes 
 oidcSetup(app);

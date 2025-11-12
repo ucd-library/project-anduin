@@ -36,7 +36,7 @@ ADMIN_ROLE = os.getenv('KEYCLOAK_ADMIN_ROLE', 'admin')
 PUBLIC_ROLE = os.getenv('KEYCLOAK_PUBLIC_ROLE', 'public')
 ROLE_DOT_PATH = os.getenv('KEYCLOAK_ROLE_DOT_PATH', 'roles')
 
-if os.getenv('USE_KEYCLOAK', 'false').lower() == 'true':
+if os.getenv('SUPERSET_KEYCLOAK_AUTH', 'false').lower() == 'true':
   print("Configuring Superset to use Keycloak OAuth2 Authentication")
   AUTH_TYPE = AUTH_OAUTH
 
@@ -69,7 +69,7 @@ if os.getenv('USE_KEYCLOAK', 'false').lower() == 'true':
 
   CUSTOM_SECURITY_MANAGER = CustomSsoSecurityManager
 
-elif os.getenv('USE_PROXY_AUTH', 'false').lower() == 'true':
+elif os.getenv('SUPERSET_REMOTE_AUTH', 'false').lower() == 'true':
     print("Configuring Superset to use Proxy Authentication")
 
     class RemoteUserMiddleware(object):

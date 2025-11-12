@@ -42,7 +42,8 @@ async function middleware(req, res, next) {
       path = service.service.pathPrefix + path;
     }
     console.log('Proxying request to service:', req.originalUrl, 'to', service.service.url + path);
-    // req.service = service;
+    req.service = service;
+
     proxyRequest(req, res, service.service.url, path);
     return;
   }
@@ -68,9 +69,26 @@ function getService(req) {
   return null;
 }
 
+function accessAllowed(req) {
+  if( req.service?.authRequired !== true ) {
+    return true;
+  }
+
+  if( !req.user ) {
+    return false;
+  }
+
+  for( let role of req.userHeader.roles ) {
+    if( req.service.allowedRoles.includes(role) ) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 function proxyRequest(req, res, host, path) {
-  logger.debug('HTTP Proxy Request: ', {
+  logger.info('HTTP Proxy Request: ', {
     url: req.originalUrl, 
     // method: req.method, 
     // headers: req.headers,
@@ -79,6 +97,17 @@ function proxyRequest(req, res, host, path) {
     // forwarded : req.ips,
     target : host+path
   });
+
+  // create user object for downstream services
+  if( req.user ) {
+    req.headers[config.auth.header] = Buffer.from(JSON.stringify(req.user));
+  }
+
+  // some services require access control here. ex: dagster
+  if( !accessAllowed(req) ) {
+    res.status(401).send('Authentication required');
+    return;
+  }
 
   proxy.web(req, res, {
     target : host+path
