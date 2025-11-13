@@ -101,7 +101,7 @@ elif os.getenv('SUPERSET_REMOTE_AUTH', 'false').lower() == 'true':
             user['superset_role'] = get_superset_role(user)
 
             if not cuser:
-                logger.info(f"Creating user {user.get('username')} with role {user.get('superset_role')}")
+                logging.info(f"Creating user {user.get('username')} with role {user.get('superset_role')}")
                 cuser = sm.add_user(
                     username=user.get('username'),
                     email=user.get('email'),
@@ -109,11 +109,11 @@ elif os.getenv('SUPERSET_REMOTE_AUTH', 'false').lower() == 'true':
                     last_name=user.get('lastName'),
                     role=sm.find_role(user.get('superset_role'))
                 )
-                sm.get_session.commit()
+                # sm.get_session.commit()
             else:
                 target_role = sm.find_role(user['superset_role'])
                 if target_role is not None and target_role.name != user.get('superset_role'):
-                    logger.info(f"User {cuser.username} exists. Role changed to {user['superset_role']}. Updating role.")
+                    logging.info(f"User {cuser.username} exists. Role changed to {user['superset_role']}. Updating role.")
                     cuser.roles = [target_role]
                     sm.update_user(cuser)
 

@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@mongodb-js/zstd": "^7.0.0",
     "@ucd-lib/logger": "^0.0.7",
     "connect-pg-simple": "^10.0.0",
     "cookie-parser": "^1.4.7",

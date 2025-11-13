@@ -18,6 +18,8 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
   && apt update \
   && apt install -y google-cloud-cli \
   && rm -rf /var/lib/apt/lists/*
+# Set python3 as gcloud sdk default python interpreter
+ENV CLOUDSDK_PYTHON="/usr/bin/python3"
 
 RUN uv pip install --no-cache-dir \
   psycopg2-binary \
