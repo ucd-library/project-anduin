@@ -1,3 +1,4 @@
+import { log } from 'console';
 import path from 'path';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
@@ -92,6 +93,7 @@ const config = {
     enabled : process.env.SUPERSET_ENABLED !== 'false',
     url : process.env.SUPERSET_URL || 'http://superset:8088',
     pathPrefix : process.env.SUPERSET_PATH_PREFIX || '/superset',
+    logoutPath : process.env.SUPERSET_LOGOUT_PATH || '/logout',
     allowedRoles : ['dashboard', 'dashboard-admin', 'admin'],
     roles : user => {
       let userRoles = (user.roles || []).map(r => r.toLowerCase());

@@ -84,10 +84,7 @@ function oidcSetup(app) {
   app.get(config.oidc.successPath, async (req, res) => {
     let jwt = req.oidc.accessToken.access_token;
 
-    if( req.query.redirect && !req.query['set-cookie'] ) {
-      res.redirect(req.query.redirect+'?jwt='+jwt);
-      return;
-    } else if( req.query.headless === 'true' ) {
+    if( req.query.headless === 'true' ) {
       let html = await fs.readFile(path.join(config.staticAssetsPath, 'headless.html'), 'utf8');
       html = html.replace('{{JWT_TOKEN}}', jwt);
 

@@ -19,7 +19,7 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
   && apt install -y google-cloud-cli \
   && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir \
+RUN uv pip install --no-cache-dir \
   psycopg2-binary \
   authlib
 

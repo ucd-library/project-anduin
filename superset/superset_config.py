@@ -76,11 +76,13 @@ elif os.getenv('SUPERSET_REMOTE_AUTH', 'false').lower() == 'true':
         def __init__(self, app):
             self.app = app
         def __call__(self, environ, start_response):
-            user = environ.pop('HTTP_X_PROXY_REMOTE_USER', None)
-            environ['REMOTE_USER'] = '{"username": "jrmerz","first_name": "Justin","last_name": "Merz","email": "jrmerz@gmail.com","roles": ["admin"]}'
+            user = environ.pop('HTTP_X_ANDUIN_USER', None)
+            environ['REMOTE_USER'] = user
             return self.app(environ, start_response)
 
     ADDITIONAL_MIDDLEWARE = [RemoteUserMiddleware, ]
+
+    LOGOUT_REDIRECT_URL = os.getenv('REMOTE_AUTH_LOGOUT_REDIRECT_URL', '/auth/logout')
 
     class RemoteUserLogin(object):
 
@@ -101,7 +103,6 @@ elif os.getenv('SUPERSET_REMOTE_AUTH', 'false').lower() == 'true':
                     logout_user()
 
             cuser = sm.find_user(username=user.get('username'))
-            logging.info("REMOTE_USER Look up user: %s", cuser)
 
             # Traverse the nested dict using ROLE_DOT_PATH (e.g., 'realm_access.roles')
             role_path = ROLE_DOT_PATH.split('.')
@@ -126,8 +127,8 @@ elif os.getenv('SUPERSET_REMOTE_AUTH', 'false').lower() == 'true':
                 cuser = sm.add_user(
                     username=user.get('username'),
                     email=user.get('email'),
-                    first_name=user.get('first_name'),
-                    last_name=user.get('last_name'),
+                    first_name=user.get('firstName'),
+                    last_name=user.get('lastName'),
                     role=sm.find_role('Gamma')
                 )
                 sm.get_session.commit()
@@ -137,28 +138,18 @@ elif os.getenv('SUPERSET_REMOTE_AUTH', 'false').lower() == 'true':
                 cuser.roles = [target_role]
                 sm.update_user(cuser)
 
-            logging.info("REMOTE_USER Login_user: %s", cuser)
             login_user(cuser)
-
 
             return cuser
 
         def get_user(self, environ):
-    #        user = environ.pop('HTTP_X_PROXY_REMOTE_USER', None)
-            # user = "kamil"
-            # if not user and self.app.debug:
-            #     # Dev hack
-            #     user = environ.get("werkzeug.request").args.get("logme")
-            #     if user:
-            #         logging.error("Logging user from request. Remove me ASAP!!!: %s", user)
-
-            # environ['REMOTE_USER'] = user
-            print('get_user called', environ['REMOTE_USER'])
-            return json.loads(environ['REMOTE_USER'])
+            user = environ.pop('REMOTE_USER', None)
+            if not user:
+                return None
+            return json.loads(user)
 
         def before_request(self):
             user = self.log_user(request.environ)
-            print("USER:", user)
             # if not user:
             #     raise Exception("Invalid login or user not found")
 

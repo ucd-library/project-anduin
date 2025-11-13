@@ -23,6 +23,10 @@
     <ucd-theme-header 
       figure-src="https://brand.library.ucdavis.edu/img/book-logo.png" 
       slogan="Powered by Anduin">
+      <ucd-theme-primary-nav>
+        <a id="user-name"></a>
+        <a href="/auth/logout">Logout</a>
+      </ucd-theme-primary-nav>
     </ucd-theme-header>
 
     <div class="content">
@@ -90,6 +94,7 @@
     <script>
       document.addEventListener('DOMContentLoaded', async () => {
         document.querySelector('ucd-theme-header').setAttribute('site-name', APP_CONFIG.appName);
+        document.getElementById('user-name').innerText = 'Welcome, '+APP_CONFIG.user.firstName;
       });
 
       ['dagster', 'cask', 'superset'].forEach(service => {

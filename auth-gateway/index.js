@@ -22,6 +22,7 @@ app.use('/config.js', (req, res) => {
   res.set('Content-Type', 'application/javascript');
   res.send(`window.APP_CONFIG = ${JSON.stringify({
     appName: config.appName,
+    user : req.user,
     dagster : {
       enabled : config.dagster.enabled,
       pathPrefix : config.dagster.pathPrefix
