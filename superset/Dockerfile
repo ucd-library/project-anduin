@@ -1,4 +1,4 @@
-FROM apache/superset:4.1.3
+FROM apache/superset:6.0.0rc2
 
 USER root
 
@@ -19,7 +19,7 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
   && apt install -y google-cloud-cli \
   && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir \
+RUN uv pip install --no-cache-dir \
   psycopg2-binary \
   authlib
 

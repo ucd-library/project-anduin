@@ -12,6 +12,9 @@
     "superset" : {
       "contextPath" : "superset"
     },
+    "auth-gateway" : {
+      "contextPath" : "auth-gateway"
+    },
     "anduin-pg" : {
       "contextPath" : "postgres",
       "options" : {

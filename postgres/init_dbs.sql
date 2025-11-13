@@ -1,2 +1,3 @@
 CREATE DATABASE superset;
 CREATE DATABASE dagster;
+CREATE SCHEMA IF NOT EXISTS auth_gateway;

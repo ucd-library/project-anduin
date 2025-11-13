@@ -33,6 +33,7 @@ class DagsterJobMaterializer {
       });
 
       if (!response.ok) {
+        console.log(await response.text());
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -141,7 +142,7 @@ class DagsterJobMaterializer {
     };
 
     const mutation = `
-      mutation LaunchPartitionBackfill($backfillParams: PartitionBackfillParams!) {
+      mutation LaunchPartitionBackfill($backfillParams: LaunchBackfillParams!) {
         launchPartitionBackfill(backfillParams: $backfillParams) {
           __typename
           ... on LaunchBackfillSuccess {
@@ -391,6 +392,86 @@ class DagsterJobMaterializer {
     }
     
     return [];
+  }
+
+  /**
+   * Remove a dynamic partition from a job
+   */
+  async removePartition(jobName, partitionKey) {
+    // Query partition sets for the job
+    const partitionSetsQuery = `
+      query GetPartitionSets($repositorySelector: RepositorySelector!, $pipelineName: String!) {
+        partitionSetsOrError(repositorySelector: $repositorySelector, pipelineName: $pipelineName) {
+          __typename
+          ... on PartitionSets {
+            results {
+              name
+              mode
+            }
+          }
+        }
+      }
+    `;
+    const variables = {
+      repositorySelector: {
+        repositoryLocationName: this.workspaceName,
+        repositoryName: '__repository__'
+      },
+      pipelineName: jobName
+    };
+    const result = await this.executeGraphQL(partitionSetsQuery, variables);
+
+    if (
+      result.partitionSetsOrError.__typename !== 'PartitionSets' ||
+      !result.partitionSetsOrError.results.length
+    ) {
+      throw new Error('No partition sets found for job');
+    }
+
+    // Use the first partition set's name as the dynamic partition definition name
+    const dynamicPartitionsDefinitionName = result.partitionSetsOrError.results[0].name;
+
+    // Now call the deleteDynamicPartition mutation
+    const mutation = `
+      mutation DeleteDynamicPartition($dynamicPartitionsDefinitionName: String!, $partitionKey: String!, $repositorySelector: RepositorySelector!) {
+        deleteDynamicPartition(
+          dynamicPartitionsDefinitionName: $dynamicPartitionsDefinitionName,
+          partitionKey: $partitionKey,
+          repositorySelector: $repositorySelector
+        ) {
+          __typename
+          ... on DeleteDynamicPartitionSuccess {
+            message
+          }
+          ... on DynamicPartitionsDefinitionNotFoundError {
+            message
+          }
+          ... on PartitionNotFoundError {
+            message
+          }
+          ... on UnauthorizedError {
+            message
+          }
+        }
+      }
+    `;
+
+    const mutationVars = {
+      dynamicPartitionsDefinitionName,
+      partitionKey,
+      repositorySelector: {
+        repositoryLocationName: this.workspaceName,
+        repositoryName: '__repository__'
+      }
+    };
+
+    const delResult = await this.executeGraphQL(mutation, mutationVars);
+
+    if (delResult.deleteDynamicPartition.__typename === 'DeleteDynamicPartitionSuccess') {
+      return { success: true, message: delResult.deleteDynamicPartition.message };
+    } else {
+      throw new Error(`Partition removal failed: ${JSON.stringify(delResult.deleteDynamicPartition)}`);
+    }
   }
 }
 

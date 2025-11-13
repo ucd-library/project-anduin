@@ -1,8 +1,8 @@
 storage:
   postgres:
     postgres_db:
-      username: dagster
-      password: dagster
+      username: postgres
+      password: postgres
       hostname: postgres
       db_name: dagster
       port: 5432
