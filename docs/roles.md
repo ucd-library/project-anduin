@@ -1,14 +1,18 @@
-# User Roles
+# Auth Gateway - User Roles
 
-The following roles are defined within the Anduin system to manage access and permissions across various components:
+The following roles are defined within the Anduin system to manage access and permissions across various services when using the Auth Gateway.
+
+
 
 - **admin**: This role has full access to all features and settings within the system. Users with this role can manage other users, configure system settings, and have unrestricted access to all data and functionalities.
 
 ## Superset (Dashboard) Roles
 
-- **dashboard**: This role has access to the dashboard features and can view and interact with dashboard data.
+https://superset.apache.org/docs/security/
 
-- **dashboard-admin**: This role has administrative privileges over Superset features but does not have full system-wide admin rights.
+- **dashboard**: This role has access to the dashboard features and can view and interact with dashboard data.  Maps to Superset's `Alpha` role.
+
+- **dashboard-admin**: This role has administrative privileges over Superset features but does not have full system-wide admin rights. Maps to Superset's `Admin` role.  Additionally, any user with the `admin` role in Anduin will also have `Admin` privileges in Superset.
 
 ## CaskFs Roles
 

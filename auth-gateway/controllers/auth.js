@@ -1,6 +1,5 @@
 import { auth } from 'express-openid-connect';
 import config from '../lib/config.js';
-import keycloak from '../lib/keycloak.js';
 import fs from 'fs/promises';
 import path from 'path';
 import pg from 'pg';
@@ -19,6 +18,8 @@ const store = new PgSession({
   tableName: config.auth.session.table,
   createTableIfMissing : true
 });
+
+// HACK, currently express-openid-connect store is not properly handling callbacks
 store.get = promisify(store.get);
 store.set = promisify(store.set);
 store.destroy = promisify(store.destroy);
@@ -97,7 +98,12 @@ function oidcSetup(app) {
   });
 
   app.get('/auth/postLogoutRedirect', (req, res) => {
-    res.clearCookie(config.oidc.cookieName);
+    for (let cookieName in req.cookies) {
+      res.clearCookie(cookieName);
+    }
+    for (let cookieName in req.signedCookies) {
+      res.clearCookie(cookieName, { signed: true });
+    }
     res.redirect('/');
   });
 }

@@ -41,16 +41,16 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
   res.status(proxyRes.statusCode);
 
   let isHTML = false, contentEncoding = null;
-  if( proxyRes.headers['content-type'] && 
+  if( config.proxy.enabledNavButtonInjection &&
+      proxyRes.headers['content-type'] && 
       proxyRes.headers['content-type'].includes('text/html') ) {
     isHTML = true;
 
     // check for content encoding so we can handle it properly
     contentEncoding = proxyRes.headers['content-encoding'];
   }
-  if( isHTML ) console.log(proxyRes.headers);
 
-
+  // this is to handle injecting a nav buttons into html responses
   if( isHTML ) {
 
     res.setHeader('content-length', parseInt(proxyRes.headers['content-length']) + scriptToInject.length);
@@ -85,33 +85,20 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
           // res.setHeader(header, csp);
           continue;
         }
-        if( header.toLowerCase() === 'content-encoding' && isHTML ) {
+        if( header.toLowerCase() === 'content-encoding' ) {
           // skip content-encoding header for html since we are modifying the body
           continue;
         }
         res.setHeader(header, proxyRes.headers[header]);
       }
+      
+      // set new content length
       res.setHeader('content-length', Buffer.byteLength(body));
       
-      // Update content-length header
-      // res.setHeader('content-length', Buffer.byteLength(body));
       res.end(body);
     });
   } else {
-
     for( let header in proxyRes.headers ) {
-      if( header.toLowerCase() === 'content-security-policy' ) {
-        // TODO: extract the nounce from the existing csp and add it here
-        // modify content-security-policy to allow injected script
-        // let csp = proxyRes.headers[header];
-        // csp = csp.replace("script-src ", "script-src 'unsafe-inline' ");
-        // res.setHeader(header, csp);
-        continue;
-      }
-      if( header.toLowerCase() === 'content-encoding' && isHTML ) {
-        // skip content-encoding header for html since we are modifying the body
-        continue;
-      }
       res.setHeader(header, proxyRes.headers[header]);
     }
 
@@ -137,14 +124,11 @@ async function middleware(req, res, next) {
       }
     }
 
-    console.log('Proxying request to service:', req.originalUrl, 'to', service.service.url + path);
     req.service = service;
 
     proxyRequest(req, res, service.service.url, path);
     return;
   }
-
-  console.log('No matching service for request:', req.originalUrl);
 
   next();
 }
@@ -185,7 +169,7 @@ function accessAllowed(req) {
 }
 
 function proxyRequest(req, res, host, path) {
-  logger.info('HTTP Proxy Request: ', {
+  logger.debug('HTTP Proxy Request: ', {
     url: req.originalUrl, 
     // method: req.method, 
     // headers: req.headers,

@@ -20,6 +20,15 @@ const config = {
 
   staticAssetsPath : path.resolve(__dirname, '..', process.env.STATIC_ASSETS_FOLDER || 'client'),
 
+  proxy : {
+    enabledNavButtonInjection : process.env.PROXY_ENABLED_NAV_BUTTON_INJECTION !== 'false',
+    manualRedirects : {
+      '/superset/logout' : '/auth/logout',
+      '/static/assets/images/superset-logo-horiz.png' : '/superset/static/assets/images/superset-logo-horiz.png',
+      '/user_info' : '/superset/user_info',
+    }
+  },
+
   pages : {
     unauthorized : process.env.UNAUTHORIZED_PAGE || '/unauthorized.html',
     headlessLogin : process.env.HEADLESS_LOGIN_PAGE || '/headless.html',

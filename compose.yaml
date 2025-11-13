@@ -29,7 +29,7 @@ services:
   dagster-daemon:
     image: ${IMAGE_PROJECT_ANDUIN_DAGSTER}
     # If using schedules or sensors or run-queue
-    command: ["dagster-daemon", "run"]
+    command: ["dagster-daemon", "run", "-f", "/dagster/examples/001_hello_world/defs.py"]
     env_file: 
       - .env
     volumes:

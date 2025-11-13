@@ -2,15 +2,15 @@ import os, logging, json
 from flask import request, g
 from flask_login import login_user, logout_user
 from flask_appbuilder.security.manager import AUTH_OAUTH, AUTH_REMOTE_USER
-from custom_security_manager import CustomSsoSecurityManager
+from custom_security_manager import CustomSsoSecurityManager, get_superset_role
+from superset import security_manager as sm
 
-
-LOGGING_LEVEL = logging.DEBUG
-logging.getLogger('superset.security').setLevel(logging.DEBUG)
-logging.getLogger('flask_appbuilder.security.manager').setLevel(logging.DEBUG)
-logging.getLogger('flask_oauthlib').setLevel(logging.DEBUG)  # if using older Flask-OAuthlib
-logging.getLogger('authlib').setLevel(logging.DEBUG)          # modern Authlib for OAuth
-logging.getLogger('flask_appbuilder.security.views').setLevel(logging.DEBUG)
+# LOGGING_LEVEL = logging.DEBUG
+# logging.getLogger('superset.security').setLevel(logging.DEBUG)
+# logging.getLogger('flask_appbuilder.security.manager').setLevel(logging.DEBUG)
+# logging.getLogger('flask_oauthlib').setLevel(logging.DEBUG)  # if using older Flask-OAuthlib
+# logging.getLogger('authlib').setLevel(logging.DEBUG)          # modern Authlib for OAuth
+# logging.getLogger('flask_appbuilder.security.views').setLevel(logging.DEBUG)
 
 POSTGRES_HOST = os.getenv('PGHOST', 'postgres')
 POSTGRES_PORT = os.getenv('PGPORT', '5432')
@@ -32,12 +32,9 @@ SUPERSET_SECRET_KEY = os.getenv('SUPERSET_SECRET_KEY', 'not_a_secret_key')
 RECAPTCHA_PUBLIC_KEY = None
 RECAPTCHA_PRIVATE_KEY = None
 
-ADMIN_ROLE = os.getenv('KEYCLOAK_ADMIN_ROLE', 'admin')
-PUBLIC_ROLE = os.getenv('KEYCLOAK_PUBLIC_ROLE', 'public')
-ROLE_DOT_PATH = os.getenv('KEYCLOAK_ROLE_DOT_PATH', 'roles')
 
 if os.getenv('SUPERSET_KEYCLOAK_AUTH', 'false').lower() == 'true':
-  print("Configuring Superset to use Keycloak OAuth2 Authentication")
+  logging.info("Configuring Superset to use Keycloak OAuth2 Authentication")
   AUTH_TYPE = AUTH_OAUTH
 
   # this would default all users to admin role
@@ -70,7 +67,7 @@ if os.getenv('SUPERSET_KEYCLOAK_AUTH', 'false').lower() == 'true':
   CUSTOM_SECURITY_MANAGER = CustomSsoSecurityManager
 
 elif os.getenv('SUPERSET_REMOTE_AUTH', 'false').lower() == 'true':
-    print("Configuring Superset to use Proxy Authentication")
+    logging.info("Configuring Superset to use Proxy Authentication")
 
     class RemoteUserMiddleware(object):
         def __init__(self, app):
@@ -82,61 +79,43 @@ elif os.getenv('SUPERSET_REMOTE_AUTH', 'false').lower() == 'true':
 
     ADDITIONAL_MIDDLEWARE = [RemoteUserMiddleware, ]
 
-    LOGOUT_REDIRECT_URL = os.getenv('REMOTE_AUTH_LOGOUT_REDIRECT_URL', '/auth/logout')
-
     class RemoteUserLogin(object):
 
         def __init__(self, app):
             self.app = app
 
         def log_user(self, environ):
-            from superset import security_manager as sm
-
-            user = self.get_user(environ)
-            logging.info("REMOTE_USER Checking logged user")
             if hasattr(g, "user") and \
                 hasattr(g.user, "username"):
                 if g.user.username == user.get('username'):
-                    logging.info("REMOTE_USER user already logged")
                     return g.user
                 else:
                     logout_user()
 
+            user = self.get_user(environ)
+            if not user:
+                return None
+
             cuser = sm.find_user(username=user.get('username'))
 
-            # Traverse the nested dict using ROLE_DOT_PATH (e.g., 'realm_access.roles')
-            role_path = ROLE_DOT_PATH.split('.')
-            roles = user
-            logging.debug(f"Initial data: {roles}")
-            for key in role_path:
-                roles = roles.get(key, {})
-                logging.debug(f"Traversing to key '{key}': {roles}")
-            
-                keycloak_roles = roles if isinstance(roles, list) else []
-                logging.info(f"Extracted Keycloak roles: {keycloak_roles} for user {user['username']}")
-
-                # Store the determined role in user_info for later use
-                if ADMIN_ROLE in keycloak_roles:
-                    user['superset_role'] = 'Admin'
-                elif PUBLIC_ROLE in keycloak_roles:
-                    user['superset_role'] = 'Public'
-                else:
-                    raise Forbidden("You are not authorized to access Superset")
+            user['superset_role'] = get_superset_role(user)
 
             if not cuser:
+                logger.info(f"Creating user {user.get('username')} with role {user.get('superset_role')}")
                 cuser = sm.add_user(
                     username=user.get('username'),
                     email=user.get('email'),
                     first_name=user.get('firstName'),
                     last_name=user.get('lastName'),
-                    role=sm.find_role('Gamma')
+                    role=sm.find_role(user.get('superset_role'))
                 )
                 sm.get_session.commit()
             else:
                 target_role = sm.find_role(user['superset_role'])
-                # if target_role and (not cuser.roles or target_role not in cuser.roles):
-                cuser.roles = [target_role]
-                sm.update_user(cuser)
+                if target_role is not None and target_role.name != user.get('superset_role'):
+                    logger.info(f"User {cuser.username} exists. Role changed to {user['superset_role']}. Updating role.")
+                    cuser.roles = [target_role]
+                    sm.update_user(cuser)
 
             login_user(cuser)
 
@@ -155,7 +134,6 @@ elif os.getenv('SUPERSET_REMOTE_AUTH', 'false').lower() == 'true':
 
     from superset.app import SupersetAppInitializer
     def app_init(app):
-        logging.info("Resgistering RemoteUserLogin")
         app.before_request(RemoteUserLogin(app).before_request)
         return SupersetAppInitializer(app)
 
@@ -165,6 +143,3 @@ elif os.getenv('SUPERSET_REMOTE_AUTH', 'false').lower() == 'true':
     AUTH_USER_REGISTRATION = True
     AUTH_ROLES_SYNC_AT_LOGIN = True
     AUTH_USER_REGISTRATION_ROLE = 'Gamma'
-    
-
-    CUSTOM_SECURITY_MANAGER = CustomSsoSecurityManager
