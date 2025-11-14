@@ -12,6 +12,18 @@ if( rolesDotPath ) {
   rolesDotPath = ['resource_access.anduin.roles', 'roles'];
 }
 
+let additionalServiceLinks = [];
+if( process.env.PROXY_ADDITIONAL_SERVICE_LINKS ) {
+  try {
+    additionalServiceLinks = JSON.parse(process.env.PROXY_ADDITIONAL_SERVICE_LINKS);
+    if( !Array.isArray(additionalServiceLinks) ) {
+      additionalServiceLinks = [additionalServiceLinks];
+    }
+  } catch (e) {
+    console.error('Error parsing PROXY_ADDITIONAL_SERVICE_LINKS:', e);
+  }
+}
+
 const config = {
   
   appName : process.env.APP_NAME || 'Anduin',
@@ -19,6 +31,7 @@ const config = {
   port : process.env.PORT || 3000,
 
   staticAssetsPath : path.resolve(__dirname, '..', process.env.STATIC_ASSETS_FOLDER || 'client'),
+  additionalServiceLinks,
 
   proxy : {
     enabledNavButtonInjection : process.env.PROXY_ENABLED_NAV_BUTTON_INJECTION !== 'false',
@@ -84,12 +97,18 @@ const config = {
     enabled : process.env.DAGSTER_ENABLED !== 'false',
     url : process.env.DAGSTER_URL || 'http://dagster:3000',
     pathPrefix : process.env.DAGSTER_PATH_PREFIX || '/dagster',
+    ui : {
+      title : 'Execute',
+      subtitle : 'Dagster',
+      color: "rec-pool",
+      icon: "fas fa-code"
+    },
     allowedRoles : ['execute', 'admin'],
     authRequired : true,
     roles : user => {
       let userRoles = (user.roles || []).map(r => r.toLowerCase());
       let matchedRoles = [];
-      for( let role of config.superset.allowedRoles ) {
+      for( let role of config.dagster.allowedRoles ) {
         if( userRoles.includes(role.toLowerCase()) ) {
           matchedRoles.push(role);
         }
@@ -102,6 +121,12 @@ const config = {
     enabled : process.env.SUPERSET_ENABLED !== 'false',
     url : process.env.SUPERSET_URL || 'http://superset:8088',
     pathPrefix : process.env.SUPERSET_PATH_PREFIX || '/superset',
+    ui : {
+      title : 'Dashboards',
+      subtitle : 'Superset',
+      color : 'poppy',
+      icon : 'fas fa-chart-bar'
+    },
     logoutPath : process.env.SUPERSET_LOGOUT_PATH || '/logout',
     allowedRoles : ['dashboard', 'dashboard-admin', 'admin'],
     roles : user => {
@@ -120,6 +145,12 @@ const config = {
     enabled : process.env.CASK_ENABLED !== 'false',
     url : process.env.CASK_URL || 'http://cask:3001',
     pathPrefix : process.env.CASK_PATH_PREFIX || '/cask',
+    ui : {
+      title : 'Files',
+      subtitle : 'CaskFs',
+      color : 'sage',
+      icon : 'fas fa-file'
+    },
     roles : user => {
       let userRoles = (user.roles || []).map(r => r.toLowerCase());
       let matchedRoles = [];

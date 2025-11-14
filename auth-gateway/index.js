@@ -1,4 +1,5 @@
 import express from 'express';
+import http from 'http';
 import { oidcSetup, accessProxy } from './controllers/auth.js';
 import config from './lib/config.js';
 import proxy from './controllers/proxy.js';
@@ -6,7 +7,14 @@ import cleanXHeadersMiddleware from './lib/clean-x-headers.js';
 import cookieParser from 'cookie-parser';
 import logger from './lib/logger.js';
 
+
 const app = express();
+const server = http.createServer(app);
+
+// setup websocket proxying
+server.on('upgrade', (req, socket, head) => {
+  proxy.wsMiddleware(req, socket, head);
+});
 
 app.use(cookieParser());
 
@@ -30,31 +38,37 @@ app.use((req, res, next) => {
 });
 
 // setup proxy
-app.use(proxy);
+app.use(proxy.httpMiddleware);
 
 app.use('/config.js', (req, res) => {
   res.set('Content-Type', 'application/javascript');
+
+  let services = [];
+
+  ['cask', 'superset', 'dagster'].forEach(svcName => {
+    if( config[svcName].enabled ) {
+      services.push({
+        name : svcName,
+        link : config[svcName].pathPrefix,
+        title : config[svcName].ui.title,
+        subtitle : config[svcName].ui.subtitle,
+        icon : config[svcName].ui.icon,
+        color : config[svcName].ui.color
+      });
+    }
+  });
+
+
   res.send(`window.APP_CONFIG = ${JSON.stringify({
     appName: config.appName,
     user : req.user,
-    dagster : {
-      enabled : config.dagster.enabled,
-      pathPrefix : config.dagster.pathPrefix
-    },
-    superset : {
-      enabled : config.superset.enabled,
-      pathPrefix : config.superset.pathPrefix
-    },
-    cask : {
-      enabled : config.cask.enabled,
-      pathPrefix : config.cask.pathPrefix
-    }
+    services : [...services, ...config.additionalServiceLinks]
   })};`);
 });
 
 // setup static routes
 app.use(express.static(config.staticAssetsPath));
 
-app.listen(config.port, () => {
+server.listen(config.port, () => {
   logger.info(`Auth Gateway running on port ${config.port}`);
 });

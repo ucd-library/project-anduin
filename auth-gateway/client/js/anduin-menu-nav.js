@@ -1,12 +1,21 @@
-let dagsterButton = `<div class="sc-aa87ce19-0 clCtDV MainNavigation_group__GKyku">
+// let dagsterButton = `<div class="sc-aa87ce19-0 clCtDV MainNavigation_group__GKyku">
+//   <div class="MainNavigation_itemContainer__B0Vw0">
+//   <a class="MainNavigation_link__ZN8D1" href="/">
+//     <div class="sc-aa87ce19-0 hooEXL">
+//       <div>Anduin Home</div>
+//     </div>
+//   </a>
+//   </div>
+// </div>`;
+
+let dagsterButton = `
   <div class="MainNavigation_itemContainer__B0Vw0">
   <a class="MainNavigation_link__ZN8D1" href="/">
     <div class="sc-aa87ce19-0 hooEXL">
       <div>Anduin Home</div>
     </div>
-  </a></div>
-</div>
-</div>`;
+  </a>
+  </div>`;
 
 let supersetButton = `<li class="ant-menu-item" role="menuitem">
   <a href="/">
@@ -25,6 +34,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
+
 function insertSupersetButton() {
   let ele = document.querySelector('.ant-menu.ant-menu-root.main-nav');
   if( ele ) {
@@ -37,7 +47,7 @@ function insertSupersetButton() {
 }
 
 function insertDagsterButton() {
-  let ele = document.querySelector('.MainNavigation_topGroups__C7EG9');
+  let ele = document.querySelector('.sc-aa87ce19-0.clCtDV.MainNavigation_group__GKyku');
   if( ele ) {
     ele.innerHTML += dagsterButton;
     console.log('Inserted button');

@@ -6,15 +6,16 @@
     <style>
       .content {
         display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(25%, 1fr));
+        gap: 3rem;
         margin-top: 1rem;
+        justify-content: center;
       }
 
       @container (min-width: 600px) {
-        .content {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
+        /* .content {
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        } */
       }
 
     </style>
@@ -23,87 +24,48 @@
     <ucd-theme-header 
       figure-src="https://brand.library.ucdavis.edu/img/book-logo.png" 
       slogan="Powered by Anduin">
-      <ucd-theme-primary-nav>
-        <a id="user-name"></a>
+      <!-- <ucd-theme-primary-nav> 
+      </ucd-theme-primary-nav> -->
+      <ucd-theme-quick-links title="" style-modifiers="highlight">
         <a href="/auth/logout">Logout</a>
-      </ucd-theme-primary-nav>
+      </ucd-theme-quick-links>
     </ucd-theme-header>
 
-    <div class="content">
-      <div class="category-brand--thiebaud-icing" id="dagster">
-        <div class="factoid factoid--brackets">
-          <a class="factoid__link" href="" id="dagster-link">
-            <div class="factoid__bracket-one"></div>
-            <div class="factoid__bracket-wrapper">
-              <div class="factoid__figure factoid__icon">
-                <cork-icon icon="fas.file"></cork-icon>
-              </div>
-              <div class="factoid__body">
-                <h2 class="factoid__big-text">Execute</h2>
-                <h3 class="factoid__small-text">
-                  <div class="no-wrap">Dagster</div> 
-                </h3>
-              </div>
-            </div>
-            <div class="factoid__bracket-two"></div>
-          </a>
-        </div>
-      </div>
-
-      <div class="category-brand--thiebaud-icing" id="cask">
-        <div class="factoid factoid--brackets">
-          <a class="factoid__link" href="" id="cask-link">
-            <div class="factoid__bracket-one"></div>
-            <div class="factoid__bracket-wrapper">
-              <div class="factoid__figure factoid__icon">
-                <cork-icon icon="fas.fingerprint"></cork-icon>
-              </div>
-              <div class="factoid__body">
-                <h2 class="factoid__big-text">Files</h2>
-                <h3 class="factoid__small-text">
-                  <div class="no-wrap">CaskFs</div> 
-                </h3>
-              </div>
-            </div>
-            <div class="factoid__bracket-two"></div>
-          </a>
-        </div>
-      </div>
-
-      <div class="category-brand--thiebaud-icing" id="superset">
-        <div class="factoid factoid--brackets">
-          <a class="factoid__link" href="" id="superset-link">
-            <div class="factoid__bracket-one"></div>
-            <div class="factoid__bracket-wrapper">
-              <div class="factoid__figure factoid__icon">
-                <cork-icon icon="fas.fingerprint"></cork-icon>
-              </div>
-              <div class="factoid__body">
-                <h2 class="factoid__big-text">Dashboard</h2>
-                <h3 class="factoid__small-text">
-                  <div class="no-wrap">Superset</div> 
-                </h3>
-              </div>
-            </div>
-            <div class="factoid__bracket-two"></div>
-          </a>
-        </div>
-      </div>
-    </div>
+    <div class="content"></div>
 
     <script>
+      function createBtn(opts={}) {
+        return `<div class="category-brand--${opts.color || 'thiebaud-icing'}" id="${opts.name}">
+        <div class="factoid factoid--brackets">
+          <a class="factoid__link" href="${opts.link}" id="${opts.name}-link">
+            <div class="factoid__bracket-one"></div>
+            <div class="factoid__bracket-wrapper">
+              <div class="factoid__figure factoid__icon">
+                <span class="${opts.icon || 'fas fa-fingerprint'}"></span>
+              </div>
+              <div class="factoid__body">
+                <h2 class="factoid__big-text">${opts.title}</h2>
+                <h3 class="factoid__small-text">
+                  <div class="no-wrap">${opts.subtitle}</div> 
+                </h3>
+              </div>
+            </div>
+            <div class="factoid__bracket-two"></div>
+          </a>
+        </div>
+      </div>`;
+      }
+
       document.addEventListener('DOMContentLoaded', async () => {
         document.querySelector('ucd-theme-header').setAttribute('site-name', APP_CONFIG.appName);
-        document.getElementById('user-name').innerText = 'Welcome, '+APP_CONFIG.user.firstName;
-      });
+        document.querySelector('ucd-theme-quick-links').title = 'Welcome, '+APP_CONFIG.user.firstName;
 
-      ['dagster', 'cask', 'superset'].forEach(service => {
-        if( !APP_CONFIG[service].enabled ) {
-          document.getElementById(service).style.display = 'none';
-          return;
+        const contentEl = document.querySelector('.content');
+        let buttonHTML = '';
+        for( let service of APP_CONFIG.services  ) {
+          buttonHTML += createBtn(service);
         }
-        const linkEl = document.getElementById(`${service}-link`);
-        linkEl.href = APP_CONFIG[service].pathPrefix;
+        contentEl.innerHTML = buttonHTML;
       });
     </script>
   </body>

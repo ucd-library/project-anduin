@@ -18,6 +18,21 @@ for( let serviceName of ALL_SERVICES ) {
   }
 }
 
+let wsProxy = httpProxy.createProxyServer({
+  ws : true
+});
+
+wsProxy.on('error', (err, req, socket) => {
+  logger.error('WebSocket proxy error: ', {
+    message: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+    headers: req.headers
+  });
+  socket.end();
+});
+
 let proxy = httpProxy.createProxyServer({
   ignorePath : true,
   selfHandleResponse : true
@@ -106,7 +121,7 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
   }
 });
 
-async function middleware(req, res, next) {
+async function httpMiddleware(req, res, next) {
   let path = req.originalUrl;
 
   let service = getService(req);
@@ -133,10 +148,24 @@ async function middleware(req, res, next) {
   next();
 }
 
+async function wsMiddleware(req, socket, head) {
+ let service = getService(req, true);
+  if( !service ) {
+    socket.end();
+    return;
+  }
+  let wsUrl = service.service.url.replace(/^http/, 'ws');
+
+  wsProxy.ws(req, socket, head, {
+    target : wsUrl
+  });
+}
+
 function getService(req) {
-  let path = req.originalUrl;
-  let referer = req.get('Referer') || '';
+  let path = req.originalUrl || req.path || req.url;
+  let referer;
   try {
+    referer = req.get('Referer') || '';
     referer = new URL(referer).pathname;
   } catch (e) {}
 
@@ -212,4 +241,4 @@ function decodeContent(body, encoding) {
   return body;
 }
 
-export default middleware;
+export default {httpMiddleware, wsMiddleware};
