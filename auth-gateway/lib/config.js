@@ -126,7 +126,8 @@ const config = {
       title : 'Dashboards',
       subtitle : 'Superset',
       color : 'poppy',
-      icon : 'fas fa-chart-bar'
+      icon : 'fas fa-chart-bar',
+      link : process.env.DEFAULT_DASHBOARD_LINK || ''
     },
     logoutPath : process.env.SUPERSET_LOGOUT_PATH || '/logout',
     allowedRoles : ['dashboard', 'dashboard-admin', 'admin'],

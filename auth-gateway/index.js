@@ -49,7 +49,7 @@ app.use('/config.js', (req, res) => {
     if( config[svcName].enabled ) {
       services.push({
         name : svcName,
-        link : config[svcName].pathPrefix,
+        link : config[svcName].ui.link || config[svcName].pathPrefix,
         title : config[svcName].ui.title,
         subtitle : config[svcName].ui.subtitle,
         icon : config[svcName].ui.icon,
