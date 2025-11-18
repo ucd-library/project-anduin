@@ -38,6 +38,7 @@ ENV DAGSTER_HOME=/opt/dagster/dagster_home/
 RUN mkdir -p $DAGSTER_HOME
 
 COPY dagster.yaml $DAGSTER_HOME
+COPY workspace.yaml $DAGSTER_HOME
 WORKDIR $DAGSTER_HOME
 
 # Set default Postgres connection parameters

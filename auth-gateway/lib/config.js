@@ -39,6 +39,7 @@ const config = {
       '/superset/logout' : '/auth/logout',
       '/static/assets/images/superset-logo-horiz.png' : '/superset/static/assets/images/superset-logo-horiz.png',
       '/user_info' : '/superset/user_info',
+      '/superset/superset/api/v1/chart/data' : '/superset/api/v1/chart/data'
     },
     allowedXHeaders : ['x-csrftoken']
   },

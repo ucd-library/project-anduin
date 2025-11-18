@@ -32,6 +32,9 @@ SUPERSET_SECRET_KEY = os.getenv('SUPERSET_SECRET_KEY', 'not_a_secret_key')
 RECAPTCHA_PUBLIC_KEY = None
 RECAPTCHA_PRIVATE_KEY = None
 
+# Attempt to fix CSV export 
+# CSV_EXPORT = {"encoding": "utf-8"}
+
 
 if os.getenv('SUPERSET_KEYCLOAK_AUTH', 'false').lower() == 'true':
   logging.info("Configuring Superset to use Keycloak OAuth2 Authentication")
