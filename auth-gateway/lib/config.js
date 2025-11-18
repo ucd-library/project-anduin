@@ -1,4 +1,4 @@
-import { log } from 'console';
+import fs from 'fs';
 import path from 'path';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
@@ -13,14 +13,16 @@ if( rolesDotPath ) {
 }
 
 let additionalServiceLinks = [];
-if( process.env.PROXY_ADDITIONAL_SERVICE_LINKS ) {
+if( process.env.ADDITIONAL_SERVICE_LINKS_CONFIG ) {
   try {
-    additionalServiceLinks = JSON.parse(process.env.PROXY_ADDITIONAL_SERVICE_LINKS);
-    if( !Array.isArray(additionalServiceLinks) ) {
-      additionalServiceLinks = [additionalServiceLinks];
+    if( fs.existsSync(process.env.ADDITIONAL_SERVICE_LINKS_CONFIG) ) {
+      let fileContent = fs.readFileSync(process.env.ADDITIONAL_SERVICE_LINKS_CONFIG, 'utf-8');
+      additionalServiceLinks = JSON.parse(fileContent);
+    } else {
+      console.error('ADDITIONAL_SERVICE_LINKS_CONFIG file does not exist:', process.env.ADDITIONAL_SERVICE_LINKS_CONFIG);
     }
   } catch (e) {
-    console.error('Error parsing PROXY_ADDITIONAL_SERVICE_LINKS:', e);
+    console.error('Error parsing ADDITIONAL_SERVICE_LINKS_CONFIG:', e);
   }
 }
 

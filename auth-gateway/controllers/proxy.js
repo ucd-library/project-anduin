@@ -18,6 +18,26 @@ for( let serviceName of ALL_SERVICES ) {
   }
 }
 
+for( let service of config.additionalServiceLinks ) {
+  if( !service.internal ) continue;
+  let def = {
+    url : service.url,
+    pathPrefix : service.pathPrefix,
+    routeRegex : new RegExp('^'+service.pathPrefix+'(\/|$)'),
+    noScriptInjection : true
+  }
+
+  if( service.public != true ) {
+    def.authRequired = true;
+    def.allowedRoles = ['admin'];
+    if( service.role ) {
+      def.allowedRoles.push(service.role);
+    }
+  }
+
+  services[service.name] = def;
+}
+
 let wsProxy = httpProxy.createProxyServer({
   ws : true
 });
@@ -57,6 +77,7 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
 
   let isHTML = false, contentEncoding = null;
   if( config.proxy.enabledNavButtonInjection &&
+      req.service?.service?.noScriptInjection != true &&
       proxyRes.headers['content-type'] && 
       proxyRes.headers['content-type'].includes('text/html') ) {
     isHTML = true;

@@ -37,7 +37,7 @@
       function createBtn(opts={}) {
         return `<div class="category-brand--${opts.color || 'thiebaud-icing'}" id="${opts.name}">
         <div class="factoid factoid--brackets">
-          <a class="factoid__link" href="${opts.link}" id="${opts.name}-link">
+          <a class="factoid__link" href="${opts.url || opts.link}" id="${opts.name}-link">
             <div class="factoid__bracket-one"></div>
             <div class="factoid__bracket-wrapper">
               <div class="factoid__figure factoid__icon">
@@ -56,6 +56,7 @@
       </div>`;
       }
 
+      document.title = APP_CONFIG.appName;
       document.addEventListener('DOMContentLoaded', async () => {
         document.querySelector('ucd-theme-header').setAttribute('site-name', APP_CONFIG.appName);
         document.querySelector('ucd-theme-quick-links').title = 'Welcome, '+APP_CONFIG.user.firstName;

@@ -58,11 +58,30 @@ app.use('/config.js', (req, res) => {
     }
   });
 
+  let additionalLinks = config.additionalServiceLinks
+    .filter((link) => {
+      if( link.public === true ) return true;
+      if( !req.user ) return false;
+
+      if( link.role && req.user.roles) {
+        if( req.user.roles.includes(link.role) ) {
+          return true;
+        } else if ( req.user.roles.includes('admin') ) {
+          return true;
+        }
+      }
+      return false;
+    })
+    .map((link) => ({...link}));
+
+  additionalLinks.forEach(s => {
+    s.url = s.internal ? s.pathPrefix : s.url;
+  });
 
   res.send(`window.APP_CONFIG = ${JSON.stringify({
     appName: config.appName,
     user : req.user,
-    services : [...services, ...config.additionalServiceLinks]
+    services : [...services, ...additionalLinks]
   })};`);
 });
 
