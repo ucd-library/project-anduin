@@ -30,7 +30,7 @@ const config = {
   
   appName : process.env.APP_NAME || 'Anduin',
   appUrl : process.env.APP_URL || 'http://localhost:4000',
-  port : process.env.PORT || 3000,
+  port : cleanK8sPort(process.env.PORT) || 3000,
 
   staticAssetsPath : path.resolve(__dirname, '..', process.env.STATIC_ASSETS_FOLDER || 'client'),
   additionalServiceLinks,
@@ -75,7 +75,7 @@ const config = {
 
   postgres : {
     host : process.env.POSTGRES_HOST || 'postgres',
-    port : process.env.POSTGRES_PORT || 5432,
+    port : cleanK8sPort(process.env.POSTGRES_PORT) || 5432,
     database : process.env.POSTGRES_DB || 'postgres',
     user : process.env.POSTGRES_USER || 'postgres',
     password : process.env.POSTGRES_PASSWORD || ''
@@ -169,6 +169,14 @@ const config = {
       return matchedRoles;
     }
   }
+}
+
+function cleanK8sPort(value) {
+  if( !value ) return null;
+  if( value.startsWith('tcp:') ) {
+    return parseInt(value.split(':').pop());
+  }
+  return parseInt(value);
 }
 
 export default config;
