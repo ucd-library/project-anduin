@@ -11,6 +11,7 @@ RUN apt-get update && \
         libpq-dev \
         gnupg \
         tini \
+        procps \
     # Add Node.js 20.x (adjust if needed)
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
