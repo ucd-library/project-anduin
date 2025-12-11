@@ -10,6 +10,7 @@ RUN apt-get update && \
         g++ \
         libpq-dev \
         gnupg \
+        tini \
     # Add Node.js 20.x (adjust if needed)
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
@@ -47,3 +48,5 @@ ENV DAGSTER_POSTGRES_PORT=5432
 ENV DAGSTER_POSTGRES_USER=postgres
 ENV DAGSTER_POSTGRES_PASSWORD=postgres
 ENV DAGSTER_POSTGRES_DB=dagster
+
+ENTRYPOINT ["tini", "--"]
