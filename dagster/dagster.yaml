@@ -45,3 +45,9 @@ schedule_storage:
         env: DAGSTER_POSTGRES_PORT
       db_name:
         env: DAGSTER_POSTGRES_DB
+
+run_coordinator:
+  module: dagster.core.run_coordinator
+  class: QueuedRunCoordinator
+  config:
+    dequeue_interval_seconds: 0.5 
