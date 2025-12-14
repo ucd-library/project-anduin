@@ -50,4 +50,6 @@ run_coordinator:
   module: dagster.core.run_coordinator
   class: QueuedRunCoordinator
   config:
-    dequeue_interval_seconds: 1 
+    dequeue_interval_seconds: 1
+    dequeue_use_threads: true
+    dequeue_num_workers: 4
