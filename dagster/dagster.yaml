@@ -50,4 +50,4 @@ run_coordinator:
   module: dagster.core.run_coordinator
   class: QueuedRunCoordinator
   config:
-    dequeue_interval_seconds: 0.5 
+    dequeue_interval_seconds: 1 
