@@ -53,3 +53,10 @@ run_coordinator:
     dequeue_interval_seconds: 1
     dequeue_use_threads: true
     dequeue_num_workers: 4
+  
+run_monitoring:
+  enabled: true
+  start_timeout_seconds: 300
+  cancel_timeout_seconds: 300
+  max_runtime_seconds: 600   # optional; prevents “hung in STARTED forever”
+  poll_interval_seconds: 120
