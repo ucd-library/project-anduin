@@ -60,3 +60,7 @@ run_monitoring:
   cancel_timeout_seconds: 300
   max_runtime_seconds: 600   # optional; prevents “hung in STARTED forever”
   poll_interval_seconds: 120
+
+run_retries:
+  enabled: true
+  max_retries: 2
