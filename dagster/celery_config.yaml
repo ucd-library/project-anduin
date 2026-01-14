@@ -1,0 +1,2 @@
+broker: pyamqp://guest:guest@rabbitmq:5672//
+backend: rpc://
