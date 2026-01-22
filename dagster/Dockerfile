@@ -23,6 +23,7 @@ RUN apt-get update && \
         dagster-webserver \
         dagster-postgres \
         dagster-docker \
+        dagster-celery \
         psycopg2-binary \
     # Clean up
     && apt-get purge -y gcc g++ curl gnupg \
@@ -42,6 +43,7 @@ RUN mkdir -p $DAGSTER_HOME
 
 COPY dagster.yaml $DAGSTER_HOME
 COPY workspace.yaml $DAGSTER_HOME
+COPY celery_config.yaml $DAGSTER_HOME
 WORKDIR $DAGSTER_HOME
 
 # Set default Postgres connection parameters
