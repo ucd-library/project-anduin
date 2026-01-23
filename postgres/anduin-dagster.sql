@@ -1,5 +1,4 @@
 CREATE SCHEMA IF NOT EXISTS anduin;
-CREATE EXTENSION IF NOT EXISTS pg_cron;
 
 CREATE TYPE anduin.backfill_status_enum AS ENUM (
   'RUNNING',
