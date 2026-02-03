@@ -71,6 +71,8 @@ proxy.on('error', (err, req, res) => {
   res.status(500).send('Internal server error');
 });
 
+logger.info('Injecting nav button script: ', config.proxy.enabledNavButtonInjection);
+
 const scriptToInject = '<script src="/js/anduin-menu-nav.js"></script>';
 proxy.on('proxyRes', (proxyRes, req, res) => {
   res.status(proxyRes.statusCode);
@@ -135,6 +137,10 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
     });
   } else {
     for( let header in proxyRes.headers ) {
+      // TODO: handle content-security-policy properly
+      if( header.toLowerCase() === 'content-security-policy' ) {
+        continue;
+      }
       res.setHeader(header, proxyRes.headers[header]);
     }
 

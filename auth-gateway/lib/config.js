@@ -36,7 +36,7 @@ const config = {
   additionalServiceLinks,
 
   proxy : {
-    enabledNavButtonInjection : process.env.PROXY_ENABLED_NAV_BUTTON_INJECTION !== 'false',
+    enabledNavButtonInjection : process.env.PROXY_ENABLED_NAV_BUTTON_INJECTION === 'true',
     manualRedirects : {
       '/superset/logout' : '/auth/logout',
       '/static/assets/images/superset-logo-horiz.png' : '/superset/static/assets/images/superset-logo-horiz.png',
