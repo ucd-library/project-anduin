@@ -3,7 +3,7 @@ import path from 'path';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-const isHTTPS = (process.env.APP_URL || '').startsWith('https://');
+const isHTTPS = (process.env.ANDUIN_APP_URL || '').startsWith('https://');
 
 let rolesDotPath = process.env.OIDC_ROLES_CLAIM_PATHS;
 if( rolesDotPath ) {
@@ -33,7 +33,7 @@ if( process.env.ADDITIONAL_SERVICE_LINKS_CONFIG ) {
 const config = {
   
   appName : process.env.APP_NAME || 'Anduin',
-  appUrl : process.env.APP_URL || 'http://localhost:4000',
+  appUrl : process.env.ANDUIN_APP_URL || 'http://localhost:4000',
   port : cleanK8sPort(process.env.PORT) || 3000,
 
   staticAssetsPath : path.resolve(__dirname, '..', process.env.STATIC_ASSETS_FOLDER || 'client'),
