@@ -17,6 +17,10 @@ if( process.env.ADDITIONAL_SERVICE_LINKS_CONFIG ) {
   try {
     if( fs.existsSync(process.env.ADDITIONAL_SERVICE_LINKS_CONFIG) ) {
       let fileContent = fs.readFileSync(process.env.ADDITIONAL_SERVICE_LINKS_CONFIG, 'utf-8');
+
+      // simple variable substitution from env vars
+      fileContent = fileContent.replace(/\$\{(\w+)\}/g, (_, name) => process.env[name] || '');
+
       additionalServiceLinks = JSON.parse(fileContent);
     } else {
       console.error('ADDITIONAL_SERVICE_LINKS_CONFIG file does not exist:', process.env.ADDITIONAL_SERVICE_LINKS_CONFIG);
