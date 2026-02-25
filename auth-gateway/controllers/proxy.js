@@ -138,9 +138,10 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
   } else {
     for( let header in proxyRes.headers ) {
       // TODO: handle content-security-policy properly
-      if( header.toLowerCase() === 'content-security-policy' ) {
-        continue;
-      }
+      // Disabling this for now
+      // if( header.toLowerCase() === 'content-security-policy' ) {
+      //   continue;
+      // }
       res.setHeader(header, proxyRes.headers[header]);
     }
 
