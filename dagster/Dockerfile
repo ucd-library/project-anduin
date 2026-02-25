@@ -44,6 +44,7 @@ RUN mkdir -p $DAGSTER_HOME
 COPY dagster.yaml $DAGSTER_HOME
 COPY workspace.yaml $DAGSTER_HOME
 COPY celery_config.yaml $DAGSTER_HOME
+COPY dagster_cleanup.py $DAGSTER_HOME
 WORKDIR $DAGSTER_HOME
 
 # Set default Postgres connection parameters
