@@ -13,7 +13,8 @@ for( let serviceName of ALL_SERVICES ) {
       url : config[serviceName].url,
       pathPrefix : config[serviceName].pathPrefix,
       routeRegex : new RegExp('^'+config[serviceName].pathPrefix+'(\/|$)'),
-      noPathPrefix : config[serviceName].noPathPrefix || false
+      noPathPrefix : config[serviceName].noPathPrefix || false,
+      stripCsp : config[serviceName].stripCsp || false,
     }
   }
 }
@@ -24,7 +25,8 @@ for( let service of config.additionalServiceLinks ) {
     url : service.url,
     pathPrefix : service.pathPrefix,
     routeRegex : new RegExp('^'+service.pathPrefix+'(\/|$)'),
-    noScriptInjection : true
+    noScriptInjection : true,
+    stripCsp : service.stripCsp || false,
   }
 
   if( service.public != true ) {
@@ -139,9 +141,10 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
     for( let header in proxyRes.headers ) {
       // TODO: handle content-security-policy properly
       // Disabling this for now
-      // if( header.toLowerCase() === 'content-security-policy' ) {
-      //   continue;
-      // }
+      if( req.service?.service?.stripCsp === true &&
+        header.toLowerCase() === 'content-security-policy' ) {
+        continue;
+      }
       res.setHeader(header, proxyRes.headers[header]);
     }
 
