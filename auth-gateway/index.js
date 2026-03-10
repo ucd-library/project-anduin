@@ -81,7 +81,8 @@ app.use('/config.js', (req, res) => {
   res.send(`window.APP_CONFIG = ${JSON.stringify({
     appName: config.appName,
     user : req.user,
-    services : [...services, ...additionalLinks]
+    services : [...services, ...additionalLinks],
+    buildInfo : config.buildInfo
   })};`);
 });
 

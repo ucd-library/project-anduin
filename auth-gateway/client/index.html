@@ -18,6 +18,49 @@
         } */
       }
 
+      .build-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding: 1rem;
+      }
+
+      .build-info__panel {
+        flex: 1 1 280px;
+        padding: 1rem 1.25rem;
+        background: white;
+        font-size: 0.875rem;
+      }
+
+      .build-info__panel h3 {
+        margin: 0 0 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 0.4rem;
+      }
+
+      .build-info__panel dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.25rem 0.75rem;
+        align-items: center;
+      }
+
+      .build-info__panel dt {
+        font-weight: 600;
+        color: #555;
+        white-space: nowrap;
+      }
+
+      .build-info__panel dd {
+        margin: 0;
+        word-break: break-all;
+        color: #222;
+      }
+
     </style>
   </head>
   <body>
@@ -67,7 +110,46 @@
           buttonHTML += createBtn(service);
         }
         contentEl.innerHTML = buttonHTML;
+        renderBuildInfo();
       });
+
+      function renderBuildInfo() {
+        const buildInfo = window.APP_CONFIG && window.APP_CONFIG.buildInfo;
+        if ( !buildInfo ) return;
+
+        const header = document.createElement('h2');
+        header.textContent = 'Build Information';
+        header.style.marginTop = '5rem';
+        header.style.marginLeft = '15px';
+        header.style.marginBottom = '0';
+        document.body.appendChild(header);
+
+        const container = document.createElement('div');
+        container.className = 'build-info';
+
+        for ( const [key, info] of Object.entries(buildInfo) ) {
+          const panel = document.createElement('div');
+          panel.className = 'build-info__panel';
+
+          const title = document.createElement('h3');
+          title.textContent = key;
+          panel.appendChild(title);
+
+          const dl = document.createElement('dl');
+          for ( const [prop, value] of Object.entries(info) ) {
+            const dt = document.createElement('dt');
+            dt.textContent = prop;
+            const dd = document.createElement('dd');
+            dd.textContent = value || '—';
+            dl.appendChild(dt);
+            dl.appendChild(dd);
+          }
+          panel.appendChild(dl);
+          container.appendChild(panel);
+        }
+
+        document.body.appendChild(container);
+      }
     </script>
   </body>
 </html>

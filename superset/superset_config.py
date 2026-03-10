@@ -19,6 +19,13 @@ POSTGRES_USER = os.getenv('PGUSER', 'postgres')
 POSTGRES_PASSWORD = os.getenv('PGPASSWORD', 'postgres')
 APPLICATION_ROOT= os.getenv('SUPERSET_APP_ROOT', '/superset')
 
+# Testing route fixes for subpath
+# APPLICATION_ROOT= os.getenv('SUPERSET_APP_ROOT', '/superset')
+# SUPERSET_APP_ROOT = os.getenv('SUPERSET_APP_ROOT', '/superset') 
+# ENABLE_PROXY_FIX=True
+# PROXY_FIX_CONFIG = {"x_for": 1, "x_proto": 1, "x_host": 1, "x_port": 1, "x_prefix": 1}
+
+
 # Handle empty password case
 if POSTGRES_PASSWORD:
     SQLALCHEMY_DATABASE_URI = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"

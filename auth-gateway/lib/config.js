@@ -30,11 +30,27 @@ if( process.env.ADDITIONAL_SERVICE_LINKS_CONFIG ) {
   }
 }
 
+const BUILD_INFO_PATH = process.env.BUILD_INFO_PATH || '/cork-build-info';
+const buildInfo = {};
+if( fs.existsSync(BUILD_INFO_PATH) ) {
+  let files = fs.readdirSync(BUILD_INFO_PATH);
+  for( let file of files ) {
+    let content = fs.readFileSync(path.resolve(BUILD_INFO_PATH, file), 'utf-8');
+    try {
+      buildInfo[file.replace('.json', '')] = JSON.parse(content);
+    } catch (error) {
+      console.warn(`Error parsing build info file ${file}: ${error.message}`);
+    }
+  }
+}
+
 const config = {
   
   appName : process.env.APP_NAME || 'Anduin',
   appUrl : process.env.ANDUIN_APP_URL || 'http://localhost:4000',
   port : cleanK8sPort(process.env.PORT) || 3000,
+
+  buildInfo,
 
   staticAssetsPath : path.resolve(__dirname, '..', process.env.STATIC_ASSETS_FOLDER || 'client'),
   additionalServiceLinks,

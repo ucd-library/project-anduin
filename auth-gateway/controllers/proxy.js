@@ -241,7 +241,7 @@ function proxyRequest(req, res, host, path) {
 
   // create user object for downstream services
   if( req.user ) {
-    req.headers[config.auth.header] = Buffer.from(JSON.stringify(req.user));
+    req.headers[config.auth.header] = JSON.stringify(req.user);
   }
 
   // some services require access control here. ex: dagster
@@ -250,10 +250,14 @@ function proxyRequest(req, res, host, path) {
     return;
   }
 
-  // check
+  // manually set X-Forwarded-Prefix from the service's pathPrefix
+  if (req.service?.service?.pathPrefix && !req.service.service.noPathPrefix) {
+    req.headers['x-forwarded-prefix'] = req.service.service.pathPrefix;
+  }
 
   proxy.web(req, res, {
-    target : host+path
+    target : host+path,
+    xfwd: true
   });
 }
 
