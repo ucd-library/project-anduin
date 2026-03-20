@@ -1,7 +1,7 @@
 dagster==1.12.19
-dagster-graphql==1.12.19
-dagster-webserver==1.12.19
-dagster-postgres==1.12.19
-dagster-docker==1.12.19
-dagster-celery==1.12.19
+dagster-graphql
+dagster-webserver
+dagster-postgres
+dagster-docker
+dagster-celery
 psycopg2-binary==2.9.11
