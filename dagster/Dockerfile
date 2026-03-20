@@ -1,5 +1,7 @@
 FROM python:3.11-slim
 
+COPY requirements.txt /tmp/requirements.txt
+
 # Install basic tools and dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -16,15 +18,8 @@ RUN apt-get update && \
     # Add Node.js 20.x (adjust if needed)
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
-    # Install Dagster
-    && pip install --no-cache-dir \
-        dagster \
-        dagster-graphql \
-        dagster-webserver \
-        dagster-postgres \
-        dagster-docker \
-        dagster-celery \
-        psycopg2-binary \
+    # Install Python dependencies
+    && pip install --no-cache-dir -r /tmp/requirements.txt \
     # Clean up
     && apt-get purge -y gcc g++ curl gnupg \
     && apt-get autoremove -y \
