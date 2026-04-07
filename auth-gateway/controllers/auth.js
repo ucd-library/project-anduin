@@ -1,11 +1,14 @@
 import { auth } from 'express-openid-connect';
 import config from '../lib/config.js';
+import logger from '../lib/logger.js';
 import fs from 'fs/promises';
 import path from 'path';
 import pg from 'pg';
 import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
 import { promisify } from 'util';
+import jwksRsa from 'jwks-rsa';
+import jwt from 'jsonwebtoken';
 
 // Docs:
 // https://expressjs.com/en/resources/middleware/session.html
@@ -24,12 +27,47 @@ store.get = promisify(store.get);
 store.set = promisify(store.set);
 store.destroy = promisify(store.destroy);
 
+// JWKS client for verifying device client tokens. Only initialized when
+// deviceClientId is configured.
+let jwksClient = null;
+if( config.oidc.deviceClientId && config.oidc.jwksUri ) {
+  jwksClient = jwksRsa({
+    jwksUri : config.oidc.jwksUri,
+    cache : true,
+    cacheMaxAge : 60 * 60 * 1000, // 1 hour
+    rateLimit : true,
+    jwksRequestsPerMinute : 5
+  });
+  logger.info('Device client auth enabled', {
+    deviceClientId : config.oidc.deviceClientId,
+    jwksUri : config.oidc.jwksUri
+  });
+}
+
 
 const publicPaths = [
-  new RegExp('^'+config.pages.unauthorized), 
+  new RegExp('^'+config.pages.unauthorized),
   new RegExp('^/health(\/|$)'),
   new RegExp('^/auth(\/|$)')
 ];
+
+// Register service-specific public paths
+const BUILTIN_SERVICES = ['dagster', 'superset', 'cask'];
+for( let name of BUILTIN_SERVICES ) {
+  let service = config[name];
+  if( !service?.enabled || !service.publicPaths?.length ) continue;
+  for( let p of service.publicPaths ) {
+    publicPaths.push(new RegExp('^' + service.pathPrefix + p));
+  }
+}
+for( let service of config.additionalServiceLinks ) {
+  if( !service.publicPaths?.length ) continue;
+  for( let p of service.publicPaths ) {
+    publicPaths.push(new RegExp('^' + service.pathPrefix + p));
+  }
+}
+logger.debug('Registered public paths: ', {publicPaths});
+
 const allowedRoles = new Set(Object.values(config.roles));
 
 function oidcSetup(app) {
@@ -161,6 +199,46 @@ async function accessProxy(req, res, next) {
   next();
 };
 
+/**
+ * Verify a device/CLI JWT against the JWKS endpoint.
+ * Caller is responsible for confirming the azp claim before calling this.
+ *
+ * @param {string} token - Raw JWT string
+ * @param {object} header - Pre-decoded JWT header (must contain kid)
+ * @returns {Promise<object|null>} Verified JWT payload, or null on failure
+ */
+async function verifyDeviceToken(token, header) {
+  let signingKey;
+  try {
+    let key = await jwksClient.getSigningKey(header.kid);
+    signingKey = key.getPublicKey();
+  } catch(e) {
+    logger.error('Error fetching JWKS signing key for device token', {
+      message : e.message,
+      kid : header.kid
+    });
+    return null;
+  }
+
+  try {
+    return jwt.verify(token, signingKey, {
+      algorithms : ['RS256', 'RS384', 'RS512'],
+      issuer : config.oidc.baseUrl
+    });
+  } catch(e) {
+    logger.warn('Device token verification failed', { message : e.message });
+    return null;
+  }
+}
+
+/**
+ * Populate req.user from the OIDC session or a Bearer token.
+ * For Bearer tokens, the JWT is decoded (without verification) to check the azp
+ * claim. If it matches the configured device client, the token is verified via
+ * JWKS. Otherwise the token is looked up in the session store.
+ *
+ * @param {import('express').Request} req
+ */
 async function setUser(req) {
   if( req.user ) return;
 
@@ -168,29 +246,49 @@ async function setUser(req) {
   if( req.oidc?.user ) {
     user = req.oidc.user;
   } else if( req.get('Authorization') ) {
-    // try fetch from bearer token
     let token = req.get('Authorization').replace(/^Bearer /i, '');
-    token = await store.get(token);
-    token = (token?.data?.id_token || '').split('.');
-    if( token.length === 3 ) {
-      let payload = Buffer.from(token[1], 'base64').toString('utf8');
-      try {
-        user = JSON.parse(payload);
-      } catch (e) {
-        console.error('Error parsing JWT payload', e);
+
+    // Decode the JWT header and payload without verifying to cheaply check
+    // whether this is a device client token before hitting JWKS.
+    if( jwksClient ) {
+      let parts = token.split('.');
+      if( parts.length === 3 ) {
+        try {
+          let header  = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf8'));
+          let payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+          let clientId = payload.azp || payload.client_id;
+          if( clientId === config.oidc.deviceClientId ) {
+            user = await verifyDeviceToken(token, header);
+          }
+        } catch(e) {
+          // not a parseable JWT, fall through to session store
+        }
+      }
+    }
+
+    // Fall back to session store lookup for headless browser tokens
+    if( !user ) {
+      let sessionData = await store.get(token);
+      let idToken = (sessionData?.data?.id_token || '').split('.');
+      if( idToken.length === 3 ) {
+        try {
+          user = JSON.parse(Buffer.from(idToken[1], 'base64').toString('utf8'));
+        } catch(e) {
+          logger.error('Error parsing session id_token payload', { message : e.message });
+        }
       }
     }
   }
 
   if( !user ) return;
-  
+
   user = {
-    username : _getDotPath(user, config.oidc.usernameDotPath),
-    email : _getDotPath(user, config.oidc.emailDotPath),
+    username  : _getDotPath(user, config.oidc.usernameDotPath),
+    email     : _getDotPath(user, config.oidc.emailDotPath),
     firstName : _getDotPath(user, config.oidc.firstNameDotPath),
-    lastName : _getDotPath(user, config.oidc.lastNameDotPath),
-    roles : parseRoles(user)
-  }
+    lastName  : _getDotPath(user, config.oidc.lastNameDotPath),
+    roles     : parseRoles(user)
+  };
 
   req.user = user;
 }

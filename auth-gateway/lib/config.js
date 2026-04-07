@@ -114,13 +114,21 @@ const config = {
     firstNameDotPath : process.env.OIDC_FIRST_NAME_CLAIM_PATH || 'given_name',
     lastNameDotPath : process.env.OIDC_LAST_NAME_CLAIM_PATH || 'family_name',
     emailDotPath : process.env.OIDC_EMAIL_CLAIM_PATH || 'email',
-    usernameDotPath : process.env.OIDC_USERNAME_CLAIM_PATH || 'preferred_username'
+    usernameDotPath : process.env.OIDC_USERNAME_CLAIM_PATH || 'preferred_username',
+    // Client ID for device/CLI clients in the same realm.
+    // When set, Bearer tokens whose azp claim matches this value are verified
+    // directly via JWKS rather than looked up in the session store.
+    deviceClientId : process.env.OIDC_DEVICE_CLIENT_ID || null,
+    // JWKS URI for verifying device client tokens. Defaults to the standard
+    // Keycloak endpoint derived from OIDC_BASE_URL.
+    jwksUri : process.env.OIDC_JWKS_URI || (process.env.OIDC_BASE_URL ? process.env.OIDC_BASE_URL + '/protocol/openid-connect/certs' : null)
   },
 
   dagster : {
     enabled : process.env.DAGSTER_ENABLED !== 'false',
     url : process.env.DAGSTER_URL || 'http://dagster:3000',
     pathPrefix : process.env.DAGSTER_PATH_PREFIX || '/dagster',
+    publicPaths : process.env.DAGSTER_PUBLIC_PATHS ? process.env.DAGSTER_PUBLIC_PATHS.split(',').map(s => s.trim()) : [],
     ui : {
       title : 'Execute',
       subtitle : 'Dagster',
@@ -146,6 +154,7 @@ const config = {
     url : process.env.SUPERSET_URL || 'http://superset:8088',
     pathPrefix : process.env.SUPERSET_PATH_PREFIX || '/superset',
     stripCsp : process.env.SUPERSET_STRIP_CSP ? (process.env.SUPERSET_STRIP_CSP === 'true') : true,
+    publicPaths : process.env.SUPERSET_PUBLIC_PATHS ? process.env.SUPERSET_PUBLIC_PATHS.split(',').map(s => s.trim()) : [],
     ui : {
       title : 'Dashboards',
       subtitle : 'Superset',
@@ -171,6 +180,7 @@ const config = {
     enabled : process.env.CASK_ENABLED !== 'false',
     url : process.env.CASK_URL || 'http://cask:3001',
     pathPrefix : process.env.CASK_PATH_PREFIX || '/cask',
+    publicPaths : process.env.CASK_PUBLIC_PATHS ? process.env.CASK_PUBLIC_PATHS.split(',').map(s => s.trim()) : ['/api/system/auth-info'],
     ui : {
       title : 'Files',
       subtitle : 'CaskFs',
