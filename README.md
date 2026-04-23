@@ -12,6 +12,7 @@ The data platform powering application data flows at the UC Davis Library. Andui
 - [Dagster](#dagster)
 - [Superset](#superset)
 - [CaskFS](#caskfs)
+- [Extending the Platform](#extending-the-platform)
 - [Development](#development)
 
 ---
@@ -26,7 +27,7 @@ The platform is built around three primary tools:
 - **[Apache Superset](https://superset.apache.org)** — explore pipeline outputs and build shareable dashboards
 - **[CaskFS](https://github.com/ucd-library/caskfs)** — managed file storage for pipeline inputs, outputs, and intermediate artifacts
 
-All three services sit behind a shared **Auth Gateway** that handles authentication via [Keycloak](https://www.keycloak.org) (OIDC/SSO) and enforces role-based access before proxying requests downstream. Users log in once and move between services without re-authenticating.
+All three services sit behind a shared **Auth Gateway** that handles authentication via [Keycloak](https://www.keycloak.org) (OIDC/SSO) and enforces role-based access before proxying requests downstream. Users log in once and move between services without re-authenticating. The gateway is also extensible—application deployments can register additional services behind the same proxy, inheriting SSO and role enforcement without modifying the core platform.
 
 ---
 
@@ -233,6 +234,33 @@ See [`docs/superset.md`](docs/superset.md) for setup instructions, PostgreSQL wi
 **API base:** [http://localhost:4000/cask](http://localhost:4000/cask)
 
 The gateway strips the `caskfs-` prefix before forwarding roles to CaskFS, so a Keycloak role of `caskfs-writer` becomes `writer` inside the service.
+
+---
+
+## Extending the Platform
+
+The Auth Gateway is designed to be extended. Any HTTP service can be registered as a proxied backend, inheriting SSO, session management, and role-based access without any changes to the core platform. This is the mechanism application teams use to expose additional tools through the same authenticated entry point.
+
+### How It Works
+
+Additional service endpoints are configured via the `ADDITIONAL_SERVICE_LINKS_CONFIG` environment variable, which points to a JSON file describing the services to proxy. Each entry defines a path prefix, upstream URL, required roles, and optional UI metadata (title, icon, color) for the gateway's navigation.
+
+### Example: Aggie Experts
+
+The [Aggie Experts](https://experts.ucdavis.edu) deployment extends Anduin by registering [Kibana](https://www.elastic.co/kibana) behind the gateway. This gives the engineering team access to Elasticsearch index metrics, search query debugging, and pipeline observability through the same SSO login—without exposing Kibana publicly or managing a separate auth layer.
+
+```mermaid
+flowchart LR
+    GW["Auth Gateway"]
+    GW -->|"/dagster"| DAG["Dagster"]
+    GW -->|"/superset"| SS["Superset"]
+    GW -->|"/cask"| CS["CaskFS"]
+    GW -->|"/kibana\n(app-defined)"| KB["Kibana"]
+
+    style KB stroke-dasharray: 5 5
+```
+
+The dashed service is registered by the application deployment, not the base platform.
 
 ---
 
