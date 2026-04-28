@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import shutil
+import os
 import sys
 from typing import Iterable, Optional
 
@@ -90,8 +92,14 @@ def main() -> int:
             print(f"[DRY RUN] Would delete run_id={run_id}")
             continue
 
-        # This deletes the run record and related stored data in Dagster's storages.
+        # Removes the run record and event logs from Postgres storage.
         instance.delete_run(run_id)
+
+        # delete_run() does not clean up the local compute log directory; remove it explicitly.
+        compute_log_dir = os.path.join(instance.dagster_home, "storage", run_id)
+        if os.path.isdir(compute_log_dir):
+            shutil.rmtree(compute_log_dir)
+
         deleted += 1
 
         if deleted % 100 == 0:
