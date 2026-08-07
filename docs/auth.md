@@ -71,3 +71,15 @@ The CaskFs instance is configured with the option to use [Keycloak](#keycloak) f
 ## Dagster
 
 Dagster is configured to run behind the Auth Gateway. There is no direct authentication or authorization configured for Dagster itself. Access control is managed by the Auth Gateway.  To access Dagster features, users must have the `execute` or `admin` role assigned to them in Keycloak.
+
+## CLI / Headless Login
+
+`GET /auth/login` accepts three optional params, forwarded through the Keycloak round trip via `returnTo` and read back by `/auth/success`:
+
+- `headless=true` — skip the normal `redirect` behavior and hand back a session token instead of sending the browser to the app.
+- `port` — a loopback port. When present, `/auth/success` redirects the browser to `http://127.0.0.1:<port>/callback?token=...&state=...&user=...` instead of rendering anything, so a local CLI server can capture the token directly (see argonath's `digtk auth login`).
+- `state` — an opaque value the caller generated and expects echoed back on the loopback callback, for CSRF protection. Not the OIDC protocol's own `state` — this one is app-level and round-trips through `returnTo` unmodified.
+
+Without `port`, the `headless=true` case instead renders `client/headless.html` with the token shown for manual copy/paste (e.g. a login initiated on a machine with no local browser).
+
+The `token` handed to headless/CLI clients is **the gateway's own session id** (the `anduin-sid` cookie value), not a JWT — the gateway never gives out the underlying Keycloak token. A client presents it back as `Authorization: Bearer <token>`; `setUser()` in `controllers/auth.js` looks it up via `store.get(token)`, the same session store a browser's cookie would resolve against. Downstream services (CaskFS, etc.) never see this token either — they only ever see the gateway's verified `x-anduin-user` header.
