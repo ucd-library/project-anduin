@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <title>Anduin — CLI Login</title>
+    <script src="https://brand.library.ucdavis.edu/ui/loader.js?ignorePolyfills=true"></script>
+    <style>
+      .login-card {
+        max-width: 640px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+      }
+
+      .login-card code {
+        display: block;
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #f4f4f4;
+        border: 1px solid #ccc;
+        word-break: break-all;
+        font-size: 0.9rem;
+      }
+
+      .login-card button {
+        margin-top: 1rem;
+      }
+
+      .login-card__hint {
+        margin-top: 1.5rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <ucd-theme-header
+      figure-src="https://brand.library.ucdavis.edu/img/book-logo.png"
+      slogan="Powered by Anduin">
+    </ucd-theme-header>
+
+    <div class="login-card">
+      <h1>Signed in as {{USERNAME}}</h1>
+      <p>Copy this code and paste it back into your terminal when the CLI prompts for it:</p>
+      <code id="token">{{SESSION_TOKEN}}</code>
+      <button id="copy-btn" class="btn">Copy to clipboard</button>
+      <p class="login-card__hint">
+        This code is a login session, not a password — treat it the same way you would an
+        active browser session. You can close this window once it's been pasted in.
+      </p>
+    </div>
+
+    <script>
+      document.getElementById('copy-btn').addEventListener('click', async () => {
+        const token = document.getElementById('token').textContent;
+        await navigator.clipboard.writeText(token);
+        const btn = document.getElementById('copy-btn');
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = original; }, 2000);
+      });
+    </script>
+  </body>
+</html>

@@ -110,6 +110,18 @@ function oidcSetup(app) {
     if ( req.query['set-cookie'] ){
       urlParams.set('set-cookie', req.query['set-cookie']);
     }
+    // CLI/headless login (see digtk auth login): these three survive the
+    // round trip to Keycloak and back via returnTo, so /auth/success can hand
+    // the session token to a loopback server instead of rendering it.
+    if ( req.query.headless ){
+      urlParams.set('headless', req.query.headless);
+    }
+    if ( req.query.port ){
+      urlParams.set('port', req.query.port);
+    }
+    if ( req.query.state ){
+      urlParams.set('state', req.query.state);
+    }
     urlParams = urlParams.toString();
 
     res.oidc.login({
@@ -121,16 +133,34 @@ function oidcSetup(app) {
   });
 
   app.get(config.oidc.successPath, async (req, res) => {
-    let jwt = req.oidc.accessToken.access_token;
+    // The gateway's session store is keyed by this cookie value, and
+    // setUser()'s Bearer-token fallback below looks tokens up the same way
+    // (store.get(token)) — so headless/CLI clients must be handed this
+    // opaque session id, never the real JWT. The gateway keeps sole custody
+    // of the JWT; a client only ever proves itself with the session id.
+    let sessionToken = req.cookies[config.auth.session.cookieName];
+    let username = _getDotPath(req.oidc.user || {}, config.oidc.usernameDotPath)
+      || _getDotPath(req.oidc.user || {}, config.oidc.emailDotPath)
+      || '';
 
     if( req.query.headless === 'true' ) {
+      let port = parseInt(req.query.port, 10);
+
+      if( Number.isInteger(port) && port > 0 && port < 65536 ) {
+        let redirectParams = new URLSearchParams({ token: sessionToken, user: username });
+        if( req.query.state ) redirectParams.set('state', req.query.state);
+        res.redirect(`http://127.0.0.1:${port}/callback?${redirectParams.toString()}`);
+        return;
+      }
+
+      // No loopback port (e.g. login initiated from a machine with no local
+      // browser) — fall back to showing the code for manual copy/paste.
       let html = await fs.readFile(path.join(config.staticAssetsPath, 'headless.html'), 'utf8');
-      html = html.replace('{{JWT_TOKEN}}', jwt);
+      html = html.replace(/{{SESSION_TOKEN}}/g, sessionToken).replace(/{{USERNAME}}/g, username || 'you');
 
       res.set('Content-Type', 'text/html');
       res.send(html);
     } else {
-      // res.cookie(config.oidc.cookieName, jwt, {httpOnly: true});
       res.redirect(req.query.redirect || '/');
     }
   });

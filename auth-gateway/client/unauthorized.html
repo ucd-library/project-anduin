@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <title>Anduin — Unauthorized</title>
+    <script src="https://brand.library.ucdavis.edu/ui/loader.js?ignorePolyfills=true"></script>
+    <style>
+      .unauthorized-card {
+        max-width: 640px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <ucd-theme-header
+      figure-src="https://brand.library.ucdavis.edu/img/book-logo.png"
+      slogan="Powered by Anduin">
+    </ucd-theme-header>
+
+    <div class="unauthorized-card">
+      <h1>You're not authorized to access this application</h1>
+      <p>
+        You're signed in, but your account doesn't have a role that grants access to
+        this service. If you believe this is a mistake, contact your administrator to
+        request the appropriate role.
+      </p>
+      <p><a href="/auth/logout">Log out</a></p>
+    </div>
+  </body>
+</html>
