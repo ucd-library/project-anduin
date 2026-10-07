@@ -96,7 +96,7 @@ def main() -> int:
         instance.delete_run(run_id)
 
         # delete_run() does not clean up the local compute log directory; remove it explicitly.
-        compute_log_dir = os.path.join(instance.dagster_home, "storage", run_id)
+        compute_log_dir = os.path.join(instance.root_directory, "storage", run_id)
         if os.path.isdir(compute_log_dir):
             shutil.rmtree(compute_log_dir)
 
