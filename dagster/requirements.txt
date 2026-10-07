@@ -5,4 +5,5 @@ dagster-postgres==0.28.19
 dagster-docker==0.28.19
 dagster-celery==0.28.19
 psycopg2-binary==2.9.11
+sqlalchemy>=2.0,<2.1
 psycopg[binary]
